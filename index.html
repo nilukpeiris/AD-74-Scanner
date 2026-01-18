@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AD-74 // DEEP SCAN OUTPUT</title>
+    <style>
+        /* --- CORE AESTHETICS --- */
+        @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+
+        :root {
+            --primary-color: #00f0ff;
+            --bg-color: #050a10;
+            --alert-color: #ff3333;
+            --warning-color: #ffcc00;
+            --panel-bg: rgba(10, 20, 30, 0.9);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--primary-color);
+            font-family: 'Space Mono', monospace;
+            margin: 0;
+            padding: 10px;
+            height: 100vh;
+            overflow: hidden;
+            text-transform: uppercase;
+            box-sizing: border-box;
+        }
+
+        /* --- ENTRY BUTTON (FULL SCREEN TRIGGER) --- */
+        #entry-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-color);
+            z-index: 300;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        #connect-btn {
+            background: transparent;
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+            padding: 15px 30px;
+            font-family: 'Space Mono', monospace;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        #connect-btn:hover {
+            background: rgba(0, 240, 255, 0.1);
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.5);
+        }
+
+        /* --- BOOT SEQUENCE ANIMATION --- */
+        .loading-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-color);
+            z-index: 200;
+            display: none; /* Triggered via JS */
+            align-items: center;
+            justify-content: center;
+        }
+
+        .boot-line-v, .boot-line-h {
+            position: absolute;
+            background: var(--primary-color);
+            box-shadow: 0 0 15px var(--primary-color);
+        }
+
+        .boot-line-v {
+            width: 2px; height: 100%;
+            left: 0;
+        }
+
+        .boot-line-h {
+            width: 100%; height: 2px;
+            top: 0;
+        }
+
+        @keyframes scan-v {
+            0% { left: 0; opacity: 1; }
+            100% { left: 100%; opacity: 1; }
+        }
+
+        @keyframes scan-h {
+            0% { top: 0; opacity: 1; }
+            100% { top: 100%; opacity: 1; }
+        }
+
+        /* --- UI COMPONENTS --- */
+        .scanner-container {
+            opacity: 0;
+            border: 2px solid var(--primary-color);
+            min-height: 100%;
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            box-sizing: border-box;
+            background: var(--panel-bg);
+            transition: opacity 0.5s ease;
+        }
+
+        .crt-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%),
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            background-size: 100% 3px, 3px 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .scanline {
+            width: 100%; height: 2px;
+            background: rgba(0, 240, 255, 0.15);
+            position: absolute; top: 0; left: 0;
+            animation: scan 4s linear infinite;
+            z-index: 101; pointer-events: none;
+        }
+
+        @keyframes scan { from { top: 0; } to { top: 100%; } }
+
+        /* --- VISUALIZATION AREA --- */
+        .component-viz {
+            text-align: center;
+            padding: 80px 0;
+            border: 1px solid rgba(0, 240, 255, 0.2);
+            background: rgba(0, 240, 255, 0.03);
+            margin: 10px 0;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: flicker 0.2s infinite;
+        }
+
+        @keyframes flicker {
+            0% { opacity: 0.98; }
+            5% { opacity: 0.92; }
+            10% { opacity: 0.98; }
+            100% { opacity: 1; }
+        }
+
+        .hex-sidebar {
+            position: absolute;
+            left: 10px; top: 20px; bottom: 20px; width: 50px;
+            font-size: 0.5em; overflow: hidden;
+            border-right: 1px solid rgba(0, 240, 255, 0.2);
+            opacity: 0.6; text-align: left;
+        }
+
+        .hex-scroll { animation: scroll-data 10s linear infinite; }
+        @keyframes scroll-data { 0% { transform: translateY(0); } 100% { transform: translateY(-50%); } }
+
+        /* --- CUBE STYLES --- */
+        .loading { width: 90px; height: 90px; perspective: 1000px; z-index: 2; }
+        .cube { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; animation: rotate 6s infinite linear; }
+        .side { position: absolute; width: 100%; height: 100%; border: 1px solid var(--primary-color); background: rgba(0, 240, 255, 0.05); box-shadow: inset 0 0 15px rgba(0, 240, 255, 0.3); display: flex; align-items: center; justify-content: center; }
+        .side::after { content: '+'; font-size: 12px; color: var(--primary-color); opacity: 0.6; }
+        .cube-scanner { position: absolute; width: 2px; height: 100%; background: rgba(0, 240, 255, 0.4); left: -10%; filter: blur(2px); animation: cube-scan 2s infinite ease-in-out; }
+        @keyframes cube-scan { 0% { left: -10%; } 100% { left: 110%; } }
+        .corner { position: absolute; width: 6px; height: 6px; border: 1.5px solid var(--primary-color); }
+        .tl { top: 0; left: 0; border-right: none; border-bottom: none; }
+        .tr { top: 0; right: 0; border-left: none; border-bottom: none; }
+        .bl { bottom: 0; left: 0; border-right: none; border-top: none; }
+        .br { bottom: 0; right: 0; border-left: none; border-top: none; }
+        .front  { transform: translateZ(45px); }
+        .back   { transform: translateZ(-45px) rotateY(180deg); }
+        .top    { transform: rotateX(90deg) translateZ(45px); }
+        .bottom { transform: rotateX(-90deg) translateZ(45px); }
+        .left   { transform: rotateY(-90deg) translateZ(45px); }
+        .right  { transform: rotateY(90deg) translateZ(45px); }
+        @keyframes rotate { from { transform: rotateY(0deg) rotateX(0deg); } to { transform: rotateY(360deg) rotateX(360deg); } }
+
+        /* --- TEXT STYLES --- */
+        .intel-box { border: 1px dashed var(--warning-color); padding: 12px; color: var(--warning-color); background: rgba(255, 204, 0, 0.05); margin-top: 15px; }
+        .status-bar { background: rgba(255, 51, 51, 0.15); padding: 8px; margin: 10px 0; font-size: 0.8em; text-align: center; border: 1px solid var(--alert-color); color: var(--alert-color); }
+    </style>
+</head>
+<body>
+    <div id="entry-screen">
+        <div style="font-size: 0.6em; opacity: 0.5;">SECURE ACCESS REQUIRED</div>
+        <button id="connect-btn">Connect to Probe AD-74</button>
+    </div>
+
+    <div class="loading-screen" id="boot-overlay">
+        <div class="boot-line-v" id="line-v"></div>
+        <div class="boot-line-h" id="line-h"></div>
+        <div style="font-size: 0.8em; letter-spacing: 5px;">INITIALIZING SCAN...</div>
+    </div>
+
+    <div class="crt-overlay"></div>
+    <div class="scanline"></div>
+
+    <div class="scanner-container" id="main-ui">
+        <header style="display: flex; justify-content: space-between; font-size: 0.6em;">
+            <div>AD-FORENSICS // PROBE</div>
+            <div>ST_MODE: ACTIVE</div>
+        </header>
+
+        <div class="status-bar">WARNING: UNKNOWN HARDWARE ARCHITECTURE</div>
+
+        <section class="component-viz">
+            <div class="hex-sidebar">
+                <div class="hex-scroll">
+                    0x4F 0xA1<br>0x22 0xBC<br>0xFF 0x00<br>0x88 0x6E<br>0xDE 0xAD<br>0xBE 0xEF<br>0x44 0x22<br>0x11 0x00<br>
+                    0x4F 0xA1<br>0x22 0xBC<br>0xFF 0x00<br>0x88 0x6E<br>0xDE 0xAD<br>0xBE 0xEF<br>0x44 0x22<br>0x11 0x00
+                </div>
+            </div>
+
+            <div style="position: absolute; top: 10px; right: 10px; font-size: 0.4em; opacity: 0.5;">RECON_LEVEL: 98%</div>
+            
+            <div class="loading">
+                <div class="cube">
+                    <div class="side front"><div class="tl corner"></div><div class="tr corner"></div><div class="bl corner"></div><div class="br corner"></div><div class="cube-scanner"></div></div>
+                    <div class="side back"><div class="tl corner"></div><div class="tr corner"></div><div class="bl corner"></div><div class="br corner"></div><div class="cube-scanner"></div></div>
+                    <div class="side top"><div class="tl corner"></div><div class="tr corner"></div><div class="bl corner"></div><div class="br corner"></div><div class="cube-scanner"></div></div>
+                    <div class="side bottom"><div class="tl corner"></div><div class="tr corner"></div><div class="bl corner"></div><div class="br corner"></div><div class="cube-scanner"></div></div>
+                    <div class="side left"><div class="tl corner"></div><div class="tr corner"></div><div class="bl corner"></div><div class="br corner"></div><div class="cube-scanner"></div></div>
+                    <div class="side right"><div class="tl corner"></div><div class="tr corner"></div><div class="bl corner"></div><div class="br corner"></div><div class="cube-scanner"></div></div>
+                </div>
+            </div>
+        </section>
+
+        <main>
+            <div style="font-size: 0.7em; margin-bottom: 5px;">[SIGNATURE DETECTED]</div>
+            <div style="font-weight: bold; border-left: 3px solid var(--primary-color); padding-left: 10px;">
+                AD-SEC-INTEL // CLASS-4 DEMOLITION
+            </div>
+
+            <div class="intel-box">
+                <h3 style="margin: 0 0 5px 0; font-size: 0.8em;">// DECRYPTED COMMS</h3>
+                <p style="margin: 0; font-size: 0.75em; text-transform: none; font-style: italic;">
+                    "Target parameters: <strong>Director Coates</strong>. Method: Forge False Flag. Disperse isotopic dust to mimic FSC demolition markers."
+                </p>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const connectBtn = document.getElementById('connect-btn');
+        const entryScreen = document.getElementById('entry-screen');
+        const bootOverlay = document.getElementById('boot-overlay');
+        const mainUI = document.getElementById('main-ui');
+        const lineV = document.getElementById('line-v');
+        const lineH = document.getElementById('line-h');
+
+        connectBtn.addEventListener('click', () => {
+            // 1. Force Fullscreen
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen();
+            }
+
+            // 2. Remove Entry Screen & Show Boot Overlay
+            entryScreen.style.display = 'none';
+            bootOverlay.style.display = 'flex';
+
+            // 3. Trigger Scan Animations
+            lineV.style.animation = 'scan-v 1s ease-in-out forwards 0.2s';
+            lineH.style.animation = 'scan-h 1s ease-in-out forwards 0.9s';
+
+            // 4. Reveal UI
+            setTimeout(() => {
+                bootOverlay.style.opacity = '0';
+                setTimeout(() => {
+                    bootOverlay.style.display = 'none';
+                    mainUI.style.opacity = '1';
+                }, 500);
+            }, 2200);
+        });
+    </script>
+</body>
+</html>
