@@ -54,11 +54,6 @@
             transition: all 0.3s ease;
         }
 
-        #connect-btn:hover {
-            background: rgba(0, 240, 255, 0.1);
-            box-shadow: 0 0 20px rgba(0, 240, 255, 0.5);
-        }
-
         /* --- BOOT SEQUENCE --- */
         .loading-screen {
             position: fixed;
@@ -144,7 +139,7 @@
             line-height: 1.4;
         }
 
-        /* --- ENHANCED CUBE SYSTEM --- */
+        /* --- CUBE SYSTEM WITH FACE OVERLAYS --- */
         .loading { 
             width: 120px; 
             height: 120px; 
@@ -162,12 +157,11 @@
             animation: rotate 8s infinite linear; 
         }
 
-        /* Ghost Shell - Counter Rotation */
         .cube.ghost {
             width: 110px;
             height: 110px;
             top: 5px; left: 5px;
-            opacity: 0.25;
+            opacity: 0.2;
             animation: rotate 12s infinite linear reverse;
         }
 
@@ -176,17 +170,51 @@
             width: 100%; 
             height: 100%; 
             border: 1px solid var(--primary-color); 
-            background: rgba(0, 240, 255, 0.05); 
+            background: rgba(0, 240, 255, 0.08); 
             display: flex; 
             align-items: center; 
             justify-content: center;
             backface-visibility: visible;
+            overflow: hidden;
         }
 
-        .ghost .side {
-            border: 1px dashed var(--primary-color);
-            background: transparent;
+        /* DATA OVERLAYS ON FACES */
+        .side::before {
+            content: "TRK_04\A ERR_77\A SEC_88";
+            white-space: pre;
+            font-size: 6px;
+            position: absolute;
+            left: 4px;
+            top: 4px;
+            text-align: left;
+            opacity: 0.7;
+            line-height: 1.2;
         }
+
+        .side::after {
+            content: "DECRYPTING...";
+            font-size: 7px;
+            position: absolute;
+            bottom: 4px;
+            right: 4px;
+            opacity: 0.8;
+            animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink { 50% { opacity: 0; } }
+
+        /* Face Core Center Labels */
+        .face-label {
+            font-size: 8px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            background: rgba(0, 240, 255, 0.1);
+            padding: 2px 4px;
+            border: 1px solid var(--primary-color);
+        }
+
+        .ghost .side { border: 1px dashed var(--primary-color); background: transparent; }
+        .ghost .side::before, .ghost .side::after { content: ""; }
 
         /* Singularity Core */
         .core-singularity {
@@ -206,11 +234,6 @@
             50% { transform: translate3d(-50%, -50%, 0) scale(1.8); opacity: 1; }
         }
 
-        /* Face Details */
-        .corner { position: absolute; width: 6px; height: 6px; border: 1px solid var(--primary-color); }
-        .tl { top: 0; left: 0; border-right: none; border-bottom: none; }
-        .br { bottom: 0; right: 0; border-left: none; border-top: none; }
-
         /* 3D Transforms */
         .front  { transform: translateZ(40px); }
         .back   { transform: translateZ(-40px) rotateY(180deg); }
@@ -229,7 +252,7 @@
 
         @keyframes rotate { from { transform: rotateY(0deg) rotateX(0deg); } to { transform: rotateY(360deg) rotateX(360deg); } }
 
-        /* --- INTEL BOXES --- */
+        /* --- FOOTER CONTENT --- */
         .intel-box { border: 1px dashed var(--warning-color); padding: 12px; color: var(--warning-color); background: rgba(255, 204, 0, 0.05); margin-top: 15px; }
         .status-bar { background: rgba(255, 51, 51, 0.15); padding: 8px; margin: 10px 0; font-size: 0.8em; text-align: center; border: 1px solid var(--alert-color); color: var(--alert-color); }
     </style>
@@ -259,32 +282,23 @@
         <div class="status-bar">WARNING: UNKNOWN HARDWARE ARCHITECTURE</div>
 
         <section class="component-viz">
-            <div class="hex-sidebar">
-                <div id="hex-data-stream">
-                    </div>
-            </div>
-
+            <div class="hex-sidebar"><div id="hex-data-stream"></div></div>
             <div style="position: absolute; top: 10px; right: 10px; font-size: 0.4em; opacity: 0.5;">RECON_LEVEL: 98%</div>
             
             <div class="loading">
                 <div class="core-singularity"></div>
                 
-                <div class="cube">
-                    <div class="side front"><div class="tl corner"></div><div class="br corner"></div></div>
-                    <div class="side back"><div class="tl corner"></div><div class="br corner"></div></div>
-                    <div class="side top"></div>
-                    <div class="side bottom"></div>
-                    <div class="side left"></div>
-                    <div class="side right"></div>
+                <div class="cube" id="data-cube">
+                    <div class="side front"><div class="face-label">01</div></div>
+                    <div class="side back"><div class="face-label">02</div></div>
+                    <div class="side top"><div class="face-label">03</div></div>
+                    <div class="side bottom"><div class="face-label">04</div></div>
+                    <div class="side left"><div class="face-label">05</div></div>
+                    <div class="side right"><div class="face-label">06</div></div>
                 </div>
 
                 <div class="cube ghost">
-                    <div class="side front"></div>
-                    <div class="side back"></div>
-                    <div class="side top"></div>
-                    <div class="side bottom"></div>
-                    <div class="side left"></div>
-                    <div class="side right"></div>
+                    <div class="side front"></div><div class="side back"></div><div class="side top"></div><div class="side bottom"></div><div class="side left"></div><div class="side right"></div>
                 </div>
             </div>
         </section>
@@ -309,18 +323,27 @@
         const entryScreen = document.getElementById('entry-screen');
         const bootOverlay = document.getElementById('boot-overlay');
         const mainUI = document.getElementById('main-ui');
-        const lineV = document.getElementById('line-v');
-        const lineH = document.getElementById('line-h');
         const hexStream = document.getElementById('hex-data-stream');
+        const cubeFaces = document.querySelectorAll('#data-cube .side');
 
-        // Generate dynamic hex data
+        // Update hex on sidebar and cube faces
         function updateHex() {
+            // Sidebar
             let data = "";
             for(let i=0; i<20; i++) {
-                data += "0x" + Math.floor(Math.random()*16777215).toString(16).toUpperCase().substring(0,2) + " ";
+                data += "0x" + Math.floor(Math.random()*256).toString(16).toUpperCase().padStart(2, '0') + " ";
                 if(i % 2 !== 0) data += "<br>";
             }
             hexStream.innerHTML = data;
+
+            // Randomize Face Overlays (pseudo-elements via CSS variables if needed, 
+            // but here we just update a label for simplicity)
+            cubeFaces.forEach(face => {
+                const label = face.querySelector('.face-label');
+                if(Math.random() > 0.8) {
+                    label.innerText = Math.floor(Math.random()*99).toString().padStart(2, '0');
+                }
+            });
         }
         setInterval(updateHex, 150);
 
@@ -328,12 +351,10 @@
             if (document.documentElement.requestFullscreen) {
                 document.documentElement.requestFullscreen();
             }
-
             entryScreen.style.display = 'none';
             bootOverlay.style.display = 'flex';
-
-            lineV.style.animation = 'scan-v 1s ease-in-out forwards 0.2s';
-            lineH.style.animation = 'scan-h 1s ease-in-out forwards 0.9s';
+            document.getElementById('line-v').style.animation = 'scan-v 1s ease-in-out forwards 0.2s';
+            document.getElementById('line-h').style.animation = 'scan-h 1s ease-in-out forwards 0.9s';
 
             setTimeout(() => {
                 bootOverlay.style.opacity = '0';
