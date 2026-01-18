@@ -110,7 +110,7 @@
 
         @keyframes scan { from { top: 0; } to { top: 100%; } }
 
-        /* --- ENHANCED VISUALIZATION AREA --- */
+        /* --- VISUALIZATION AREA --- */
         .component-viz {
             text-align: center;
             padding: 100px 0;
@@ -139,90 +139,63 @@
             line-height: 1.4;
         }
 
-        /* --- CUBE SYSTEM WITH FACE OVERLAYS --- */
+        /* --- CUBE SYSTEM --- */
         .loading { 
-            width: 120px; 
-            height: 120px; 
+            width: 120px; height: 120px; 
             perspective: 1000px; 
-            z-index: 2; 
             position: relative;
         }
 
         .cube { 
-            width: 80px; 
-            height: 80px; 
-            position: absolute;
-            top: 20px; left: 20px;
+            width: 80px; height: 80px; 
+            position: absolute; top: 20px; left: 20px;
             transform-style: preserve-3d; 
             animation: rotate 8s infinite linear; 
         }
 
         .cube.ghost {
-            width: 110px;
-            height: 110px;
-            top: 5px; left: 5px;
-            opacity: 0.2;
+            width: 110px; height: 110px;
+            top: 5px; left: 5px; opacity: 0.2;
             animation: rotate 12s infinite linear reverse;
         }
 
         .side { 
-            position: absolute; 
-            width: 100%; 
-            height: 100%; 
+            position: absolute; width: 100%; height: 100%; 
             border: 1px solid var(--primary-color); 
             background: rgba(0, 240, 255, 0.08); 
-            display: flex; 
-            align-items: center; 
-            justify-content: center;
-            backface-visibility: visible;
-            overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
+            backface-visibility: visible; overflow: hidden;
         }
 
-        /* DATA OVERLAYS ON FACES */
+        /* FACE OVERLAYS */
         .side::before {
             content: "TRK_04\A ERR_77\A SEC_88";
-            white-space: pre;
-            font-size: 6px;
-            position: absolute;
-            left: 4px;
-            top: 4px;
-            text-align: left;
-            opacity: 0.7;
-            line-height: 1.2;
+            white-space: pre; font-size: 6px;
+            position: absolute; left: 4px; top: 4px;
+            text-align: left; opacity: 0.7; line-height: 1.2;
         }
 
         .side::after {
             content: "DECRYPTING...";
-            font-size: 7px;
-            position: absolute;
-            bottom: 4px;
-            right: 4px;
-            opacity: 0.8;
-            animation: blink 1s step-end infinite;
+            font-size: 7px; position: absolute; bottom: 4px; right: 4px;
+            opacity: 0.8; animation: blink 1s step-end infinite;
         }
 
         @keyframes blink { 50% { opacity: 0; } }
 
-        /* Face Core Center Labels */
         .face-label {
-            font-size: 8px;
-            font-weight: bold;
-            letter-spacing: 1px;
-            background: rgba(0, 240, 255, 0.1);
-            padding: 2px 4px;
+            font-size: 8px; font-weight: bold; letter-spacing: 1px;
+            background: rgba(0, 240, 255, 0.1); padding: 2px 4px;
             border: 1px solid var(--primary-color);
         }
 
         .ghost .side { border: 1px dashed var(--primary-color); background: transparent; }
         .ghost .side::before, .ghost .side::after { content: ""; }
 
-        /* Singularity Core */
+        /* CORE */
         .core-singularity {
-            position: absolute;
-            top: 50%; left: 50%;
-            width: 6px; height: 6px;
-            background: #fff;
-            border-radius: 50%;
+            position: absolute; top: 50%; left: 50%;
+            width: 6px; height: 6px; background: #fff; border-radius: 50%;
             transform: translate3d(-50%, -50%, 0);
             box-shadow: 0 0 15px 2px var(--primary-color), 0 0 30px 5px rgba(0, 240, 255, 0.4);
             animation: core-pulse 2s infinite ease-in-out;
@@ -234,7 +207,7 @@
             50% { transform: translate3d(-50%, -50%, 0) scale(1.8); opacity: 1; }
         }
 
-        /* 3D Transforms */
+        /* 3D POSITIONS */
         .front  { transform: translateZ(40px); }
         .back   { transform: translateZ(-40px) rotateY(180deg); }
         .top    { transform: rotateX(90deg) translateZ(40px); }
@@ -242,7 +215,6 @@
         .left   { transform: rotateY(-90deg) translateZ(40px); }
         .right  { transform: rotateY(90deg) translateZ(40px); }
 
-        /* Ghost 3D Transforms */
         .ghost .front  { transform: translateZ(55px); }
         .ghost .back   { transform: translateZ(-55px) rotateY(180deg); }
         .ghost .top    { transform: rotateX(90deg) translateZ(55px); }
@@ -252,9 +224,10 @@
 
         @keyframes rotate { from { transform: rotateY(0deg) rotateX(0deg); } to { transform: rotateY(360deg) rotateX(360deg); } }
 
-        /* --- FOOTER CONTENT --- */
-        .intel-box { border: 1px dashed var(--warning-color); padding: 12px; color: var(--warning-color); background: rgba(255, 204, 0, 0.05); margin-top: 15px; }
+        /* --- ANALYSIS BOXES --- */
+        .intel-box { border: 1px solid var(--warning-color); padding: 12px; color: var(--warning-color); background: rgba(255, 204, 0, 0.05); margin-top: 10px; }
         .status-bar { background: rgba(255, 51, 51, 0.15); padding: 8px; margin: 10px 0; font-size: 0.8em; text-align: center; border: 1px solid var(--alert-color); color: var(--alert-color); }
+        .substance-tag { flex: 1; background: rgba(0, 240, 255, 0.1); padding: 5px; border-left: 2px solid var(--primary-color); font-size: 0.6em; }
     </style>
 </head>
 <body>
@@ -287,7 +260,6 @@
             
             <div class="loading">
                 <div class="core-singularity"></div>
-                
                 <div class="cube" id="data-cube">
                     <div class="side front"><div class="face-label">01</div></div>
                     <div class="side back"><div class="face-label">02</div></div>
@@ -296,7 +268,6 @@
                     <div class="side left"><div class="face-label">05</div></div>
                     <div class="side right"><div class="face-label">06</div></div>
                 </div>
-
                 <div class="cube ghost">
                     <div class="side front"></div><div class="side back"></div><div class="side top"></div><div class="side bottom"></div><div class="side left"></div><div class="side right"></div>
                 </div>
@@ -304,63 +275,74 @@
         </section>
 
         <main>
-            <div style="font-size: 0.7em; margin-bottom: 5px;">[SIGNATURE DETECTED]</div>
-            <div style="font-weight: bold; border-left: 3px solid var(--primary-color); padding-left: 10px;">
-                AD-SEC-INTEL // CLASS-4 DEMOLITION
+            <div style="font-size: 0.7em; margin-bottom: 5px; color: var(--primary-color);">[SCANNER_RESULT // POSITIVE]</div>
+            <div style="font-weight: bold; border-left: 3px solid var(--alert-color); padding-left: 10px; font-size: 0.9em;">
+                SUB-SURFACE THERMITE ENTRAINMENT // DETECTED
             </div>
 
             <div class="intel-box">
-                <h3 style="margin: 0 0 5px 0; font-size: 0.8em;">// DECRYPTED COMMS</h3>
-                <p style="margin: 0; font-size: 0.75em; text-transform: none; font-style: italic;">
-                    "Target parameters: <strong>Director Coates</strong>. Method: Forge False Flag. Disperse isotopic dust to mimic FSC demolition markers."
+                <div style="display: flex; justify-content: space-between; font-size: 0.6em; margin-bottom: 8px; border-bottom: 1px solid rgba(255, 204, 0, 0.3); padding-bottom: 4px;">
+                    <span>REPORT: AD-74.9</span>
+                    <span id="match-pct" style="color: #000; background: var(--warning-color); padding: 0 4px; font-weight: bold;">23.4% FSC MATCH</span>
+                </div>
+                <p style="margin: 0; font-size: 0.72em; text-transform: none; line-height: 1.5; font-style: italic;">
+                    Visualizing <strong>Class-4 controlled molecular shearing</strong> markers. Nano-particulate Accelerant <strong>[IS-109]</strong> and Barium-Nitrate residue detected. Hardware signature shows only a ~23% match for FSC device makeup from previous confirmed FSC attacks. Likely conclusion: <strong>non-FSC device</strong>.
                 </p>
+            </div>
+
+            <div style="margin-top: 10px; display: flex; gap: 8px;">
+                <div class="substance-tag">DETECTION: <span id="sub-name" style="color: #fff;">FE-THERMITE</span></div>
+                <div class="substance-tag">CONC: <span id="sub-val" style="color: #fff;">0.0042%</span></div>
             </div>
         </main>
     </div>
 
     <script>
-        const connectBtn = document.getElementById('connect-btn');
-        const entryScreen = document.getElementById('entry-screen');
-        const bootOverlay = document.getElementById('boot-overlay');
-        const mainUI = document.getElementById('main-ui');
+        const substances = ["FE-THERMITE", "BA-NITRATE", "IS-109 DUST", "AL-POWDER", "MG-STRIPS"];
         const hexStream = document.getElementById('hex-data-stream');
         const cubeFaces = document.querySelectorAll('#data-cube .side');
+        const matchText = document.getElementById('match-pct');
+        const subName = document.getElementById('sub-name');
+        const subVal = document.getElementById('sub-val');
 
-        // Update hex on sidebar and cube faces
-        function updateHex() {
-            // Sidebar
+        function updateUI() {
+            // Sidebar Hex
             let data = "";
-            for(let i=0; i<20; i++) {
+            for(let i=0; i<18; i++) {
                 data += "0x" + Math.floor(Math.random()*256).toString(16).toUpperCase().padStart(2, '0') + " ";
                 if(i % 2 !== 0) data += "<br>";
             }
             hexStream.innerHTML = data;
 
-            // Randomize Face Overlays (pseudo-elements via CSS variables if needed, 
-            // but here we just update a label for simplicity)
+            // Analysis Jitter
+            if (Math.random() > 0.85) {
+                let jitter = (23 + Math.random()).toFixed(1);
+                matchText.innerText = jitter + "% FSC MATCH";
+                subName.innerText = substances[Math.floor(Math.random()*substances.length)];
+                subVal.innerText = (Math.random() * 0.02).toFixed(4) + "%";
+            }
+
+            // Cube Labels
             cubeFaces.forEach(face => {
                 const label = face.querySelector('.face-label');
-                if(Math.random() > 0.8) {
-                    label.innerText = Math.floor(Math.random()*99).toString().padStart(2, '0');
-                }
+                if(Math.random() > 0.95) label.innerText = Math.floor(Math.random()*99).toString().padStart(2, '0');
             });
         }
-        setInterval(updateHex, 150);
 
-        connectBtn.addEventListener('click', () => {
-            if (document.documentElement.requestFullscreen) {
-                document.documentElement.requestFullscreen();
-            }
-            entryScreen.style.display = 'none';
-            bootOverlay.style.display = 'flex';
+        setInterval(updateUI, 150);
+
+        document.getElementById('connect-btn').addEventListener('click', () => {
+            if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
+            document.getElementById('entry-screen').style.display = 'none';
+            document.getElementById('boot-overlay').style.display = 'flex';
             document.getElementById('line-v').style.animation = 'scan-v 1s ease-in-out forwards 0.2s';
             document.getElementById('line-h').style.animation = 'scan-h 1s ease-in-out forwards 0.9s';
 
             setTimeout(() => {
-                bootOverlay.style.opacity = '0';
+                document.getElementById('boot-overlay').style.opacity = '0';
                 setTimeout(() => {
-                    bootOverlay.style.display = 'none';
-                    mainUI.style.opacity = '1';
+                    document.getElementById('boot-overlay').style.display = 'none';
+                    document.getElementById('main-ui').style.opacity = '1';
                 }, 500);
             }, 2200);
         });
