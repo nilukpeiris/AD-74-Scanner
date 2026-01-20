@@ -21,12 +21,14 @@
             color: var(--primary-color);
             font-family: 'Space Mono', monospace;
             margin: 0;
-            padding: 30px 10px;
+            padding: 20px 10px;
             height: 100vh;
 	    height: 100svh;
             overflow: hidden;
             text-transform: uppercase;
             box-sizing: border-box;
+	    display: flex;
+	    flex-direction: column;
         }
 
         /* --- ENTRY BUTTON --- */
@@ -80,7 +82,8 @@
 
         /* --- UI COMPONENTS --- */
         .scanner-container {
-            opacity: 0;
+            flex: 1;
+	    opacity: 0;
             border: 2px solid var(--primary-color);
             min-height: calc(100% - 10px);
             display: flex;
@@ -89,6 +92,7 @@
             box-sizing: border-box;
             background: var(--panel-bg);
             transition: opacity 0.5s ease;
+	    overflow: hidden;
         }
 
         .crt-overlay {
@@ -347,6 +351,18 @@
                 }, 500);
             }, 2200);
         });
+
+const fixViewportHeight = () => {
+    // We calculate the actual visible height and set it to a CSS variable or directly to the body
+    let vh = window.innerHeight * 0.01;
+    document.documentElement.style.setProperty('--vh', `${vh}px`);
+    document.body.style.height = `${window.innerHeight}px`;
+};
+
+// Run on load and whenever the screen is resized (like when the address bar hides/shows)
+window.addEventListener('resize', fixViewportHeight);
+window.addEventListener('orientationchange', fixViewportHeight);
+fixViewportHeight();
     </script>
 </body>
 </html>
