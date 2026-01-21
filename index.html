@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AD-74 // DEEP SCAN OUTPUT</title>
+    <script src="https://unpkg.com/@zxing/library@latest"></script>
     <style>
         /* --- CORE AESTHETICS --- */
         @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
@@ -23,12 +24,12 @@
             margin: 0;
             padding: 20px 10px;
             height: 100vh;
-	    height: 100svh;
+            height: 100svh;
             overflow: hidden;
             text-transform: uppercase;
             box-sizing: border-box;
-	    display: flex;
-	    flex-direction: column;
+            display: flex;
+            flex-direction: column;
         }
 
         /* --- ENTRY BUTTON --- */
@@ -83,7 +84,7 @@
         /* --- UI COMPONENTS --- */
         .scanner-container {
             flex: 1;
-	    opacity: 0;
+            opacity: 0;
             border: 2px solid var(--primary-color);
             min-height: calc(100% - 10px);
             display: flex;
@@ -92,7 +93,7 @@
             box-sizing: border-box;
             background: var(--panel-bg);
             transition: opacity 0.5s ease;
-	    overflow: hidden;
+            overflow: hidden;
         }
 
         .crt-overlay {
@@ -105,22 +106,11 @@
             z-index: 100;
         }
 
-        .scanline {
-            width: 100%; height: 2px;
-            background: rgba(0, 240, 255, 0.15);
-            position: absolute; top: 0; left: 0;
-            animation: scan 4s linear infinite;
-            z-index: 101; pointer-events: none;
-        }
-
-        @keyframes scan { from { top: 0; } to { top: 100%; } }
-
-        /* --- VISUALIZATION AREA --- */
+        /* --- CAMERA AREA (Top 50%) --- */
         .component-viz {
-            text-align: center;
-            padding: 100px 0;
+            flex: 1; /* Split 50/50 with <main> */
             border: 1px solid rgba(0, 240, 255, 0.2);
-            background: rgba(0, 240, 255, 0.03);
+            background: #000;
             margin: 10px 0;
             overflow: hidden;
             position: relative;
@@ -128,6 +118,24 @@
             justify-content: center;
             align-items: center;
             animation: flicker 0.2s infinite;
+        }
+
+        #camera-feed {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: grayscale(1) contrast(1.2) brightness(0.8) sepia(1) hue-rotate(140deg);
+            opacity: 0.7;
+        }
+
+        /* --- MAIN SECTION (Bottom 50%) --- */
+        main {
+            flex: 1; /* Split 50/50 with .component-viz */
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            padding-top: 10px;
+            border-top: 1px solid rgba(0, 240, 255, 0.2);
         }
 
         @keyframes flicker {
@@ -142,92 +150,8 @@
             border-right: 1px solid rgba(0, 240, 255, 0.2);
             opacity: 0.6; text-align: left;
             line-height: 1.4;
+            z-index: 10;
         }
-
-        /* --- CUBE SYSTEM --- */
-        .loading { 
-            width: 120px; height: 120px; 
-            perspective: 1000px; 
-            position: relative;
-        }
-
-        .cube { 
-            width: 80px; height: 80px; 
-            position: absolute; top: 20px; left: 20px;
-            transform-style: preserve-3d; 
-            animation: rotate 8s infinite linear; 
-        }
-
-        .cube.ghost {
-            width: 110px; height: 110px;
-            top: 5px; left: 5px; opacity: 0.2;
-            animation: rotate 12s infinite linear reverse;
-        }
-
-        .side { 
-            position: absolute; width: 100%; height: 100%; 
-            border: 1px solid var(--primary-color); 
-            background: rgba(0, 240, 255, 0.08); 
-            display: flex; align-items: center; justify-content: center;
-            backface-visibility: visible; overflow: hidden;
-        }
-
-        /* FACE OVERLAYS */
-        .side::before {
-            content: "TRK_04\A ERR_77\A SEC_88";
-            white-space: pre; font-size: 6px;
-            position: absolute; left: 4px; top: 4px;
-            text-align: left; opacity: 0.7; line-height: 1.2;
-        }
-
-        .side::after {
-            content: "DECRYPTING...";
-            font-size: 7px; position: absolute; bottom: 4px; right: 4px;
-            opacity: 0.8; animation: blink 1s step-end infinite;
-        }
-
-        @keyframes blink { 50% { opacity: 0; } }
-
-        .face-label {
-            font-size: 8px; font-weight: bold; letter-spacing: 1px;
-            background: rgba(0, 240, 255, 0.1); padding: 2px 4px;
-            border: 1px solid var(--primary-color);
-        }
-
-        .ghost .side { border: 1px dashed var(--primary-color); background: transparent; }
-        .ghost .side::before, .ghost .side::after { content: ""; }
-
-        /* CORE */
-        .core-singularity {
-            position: absolute; top: 50%; left: 50%;
-            width: 6px; height: 6px; background: #fff; border-radius: 50%;
-            transform: translate3d(-50%, -50%, 0);
-            box-shadow: 0 0 15px 2px var(--primary-color), 0 0 30px 5px rgba(0, 240, 255, 0.4);
-            animation: core-pulse 2s infinite ease-in-out;
-            z-index: 5;
-        }
-
-        @keyframes core-pulse {
-            0%, 100% { transform: translate3d(-50%, -50%, 0) scale(1); opacity: 0.7; }
-            50% { transform: translate3d(-50%, -50%, 0) scale(1.8); opacity: 1; }
-        }
-
-        /* 3D POSITIONS */
-        .front  { transform: translateZ(40px); }
-        .back   { transform: translateZ(-40px) rotateY(180deg); }
-        .top    { transform: rotateX(90deg) translateZ(40px); }
-        .bottom { transform: rotateX(-90deg) translateZ(40px); }
-        .left   { transform: rotateY(-90deg) translateZ(40px); }
-        .right  { transform: rotateY(90deg) translateZ(40px); }
-
-        .ghost .front  { transform: translateZ(55px); }
-        .ghost .back   { transform: translateZ(-55px) rotateY(180deg); }
-        .ghost .top    { transform: rotateX(90deg) translateZ(55px); }
-        .ghost .bottom { transform: rotateX(-90deg) translateZ(55px); }
-        .ghost .left   { transform: rotateY(-90deg) translateZ(55px); }
-        .ghost .right  { transform: rotateY(90deg) translateZ(55px); }
-
-        @keyframes rotate { from { transform: rotateY(0deg) rotateX(0deg); } to { transform: rotateY(360deg) rotateX(360deg); } }
 
         /* --- ANALYSIS BOXES --- */
         .intel-box { border: 1px solid var(--warning-color); padding: 12px; color: var(--warning-color); background: rgba(255, 204, 0, 0.05); margin-top: 10px; }
@@ -249,92 +173,60 @@
     </div>
 
     <div class="crt-overlay"></div>
-    <div class="scanline"></div>
 
     <div class="scanner-container" id="main-ui">
         <header style="display: flex; justify-content: space-between; font-size: 0.6em;">
             <div>AD-FORENSICS // PROBE</div>
-            <div>ST_MODE: ACTIVE</div>
+            <div id="scan-mode">ST_MODE: MULTI_SCAN</div>
         </header>
 
-        <div class="status-bar">WARNING: UNKNOWN HARDWARE ARCHITECTURE</div>
+        <div class="status-bar" id="status-display">AWAITING OPTICAL SYMBOL INPUT</div>
 
         <section class="component-viz">
             <div class="hex-sidebar"><div id="hex-data-stream"></div></div>
-            <div style="position: absolute; top: 10px; right: 10px; font-size: 0.4em; opacity: 0.5;">RECON_LEVEL: 98%</div>
-            
-            <div class="loading">
-                <div class="core-singularity"></div>
-                <div class="cube" id="data-cube">
-                    <div class="side front"><div class="face-label">01</div></div>
-                    <div class="side back"><div class="face-label">02</div></div>
-                    <div class="side top"><div class="face-label">03</div></div>
-                    <div class="side bottom"><div class="face-label">04</div></div>
-                    <div class="side left"><div class="face-label">05</div></div>
-                    <div class="side right"><div class="face-label">06</div></div>
-                </div>
-                <div class="cube ghost">
-                    <div class="side front"></div><div class="side back"></div><div class="side top"></div><div class="side bottom"></div><div class="side left"></div><div class="side right"></div>
-                </div>
-            </div>
+            <video id="camera-feed" autoplay playsinline muted></video>
         </section>
 
         <main>
-            <div style="font-size: 0.7em; margin-bottom: 5px; color: var(--primary-color);">[SCANNER_RESULT // POSITIVE]</div>
-            <div style="font-weight: bold; border-left: 3px solid var(--alert-color); padding-left: 10px; font-size: 0.9em;">
-                SUB-SURFACE THERMITE ENTRAINMENT // DETECTED
+            <div style="font-size: 0.7em; margin-bottom: 5px; color: var(--primary-color);">[DECODER_RESULT // OUTPUT]</div>
+            <div id="decoded-output" style="font-weight: bold; border-left: 3px solid var(--alert-color); padding-left: 10px; font-size: 0.9em; word-break: break-all;">
+                NO DATA EXTRACTED
             </div>
 
             <div class="intel-box">
                 <div style="display: flex; justify-content: space-between; font-size: 0.6em; margin-bottom: 8px; border-bottom: 1px solid rgba(255, 204, 0, 0.3); padding-bottom: 4px;">
-                    <span>REPORT: AD-74.9</span>
-                    <span id="match-pct" style="color: #000; background: var(--warning-color); padding: 0 4px; font-weight: bold;">23.4% FSC MATCH</span>
+                    <span>REPORT: AD-74.ZX</span>
+                    <span id="match-pct" style="color: #000; background: var(--warning-color); padding: 0 4px; font-weight: bold;">0.0% SYNC</span>
                 </div>
-                <p style="margin: 0; font-size: 0.72em; text-transform: none; line-height: 1.5; font-style: italic;">
-                    Visualizing <strong>Class-4 controlled molecular shearing</strong> markers. Nano-particulate Accelerant <strong>[IS-109]</strong> and Barium-Nitrate residue detected. Hardware signature shows only a ~23% match for FSC device makeup from previous confirmed FSC attacks. Likely conclusion: <strong>non-FSC device</strong>.
+                <p id="info-p" style="margin: 0; font-size: 0.72em; text-transform: none; line-height: 1.5; font-style: italic;">
+                    System optimized for Multi-Format Optical Decoding. compatible with QR, Data Matrix, and Aztec signatures.
                 </p>
-            </div>
-
-            <div style="margin-top: 10px; display: flex; gap: 8px;">
-                <div class="substance-tag">DETECTION: <span id="sub-name" style="color: #fff;">FE-THERMITE</span></div>
-                <div class="substance-tag">CONC: <span id="sub-val" style="color: #fff;">0.0042%</span></div>
             </div>
         </main>
     </div>
 
     <script>
-        const substances = ["FE-THERMITE", "BA-NITRATE", "IS-109 DUST", "AL-POWDER", "MG-STRIPS"];
         const hexStream = document.getElementById('hex-data-stream');
-        const cubeFaces = document.querySelectorAll('#data-cube .side');
-        const matchText = document.getElementById('match-pct');
-        const subName = document.getElementById('sub-name');
-        const subVal = document.getElementById('sub-val');
+        const codeReader = new ZXing.BrowserMultiFormatReader();
 
-        function updateUI() {
-            // Sidebar Hex
+        function updateHex() {
             let data = "";
             for(let i=0; i<18; i++) {
                 data += "0x" + Math.floor(Math.random()*256).toString(16).toUpperCase().padStart(2, '0') + " ";
                 if(i % 2 !== 0) data += "<br>";
             }
             hexStream.innerHTML = data;
+        }
+        setInterval(updateHex, 150);
 
-            // Analysis Jitter
-            if (Math.random() > 0.85) {
-                let jitter = (23 + Math.random()).toFixed(1);
-                matchText.innerText = jitter + "% FSC MATCH";
-                subName.innerText = substances[Math.floor(Math.random()*substances.length)];
-                subVal.innerText = (Math.random() * 0.02).toFixed(4) + "%";
-            }
-
-            // Cube Labels
-            cubeFaces.forEach(face => {
-                const label = face.querySelector('.face-label');
-                if(Math.random() > 0.95) label.innerText = Math.floor(Math.random()*99).toString().padStart(2, '0');
+        function startDecoding() {
+            codeReader.decodeFromVideoDevice(null, 'camera-feed', (result, err) => {
+                if (result) {
+                    document.getElementById('decoded-output').innerText = result.getText();
+                    document.getElementById('match-pct').innerText = "100% SYNC";
+                }
             });
         }
-
-        setInterval(updateUI, 150);
 
         document.getElementById('connect-btn').addEventListener('click', () => {
             if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
@@ -344,25 +236,19 @@
             document.getElementById('line-h').style.animation = 'scan-h 1s ease-in-out forwards 0.9s';
 
             setTimeout(() => {
-                document.getElementById('boot-overlay').style.opacity = '0';
-                setTimeout(() => {
-                    document.getElementById('boot-overlay').style.display = 'none';
-                    document.getElementById('main-ui').style.opacity = '1';
-                }, 500);
+                document.getElementById('boot-overlay').style.display = 'none';
+                document.getElementById('main-ui').style.opacity = '1';
+                startDecoding();
             }, 2200);
         });
 
-const fixViewportHeight = () => {
-    // We calculate the actual visible height and set it to a CSS variable or directly to the body
-    let vh = window.innerHeight * 0.01;
-    document.documentElement.style.setProperty('--vh', `${vh}px`);
-    document.body.style.height = `${window.innerHeight}px`;
-};
+        const fixViewportHeight = () => {
+            document.body.style.height = `${window.innerHeight}px`;
+        };
 
-// Run on load and whenever the screen is resized (like when the address bar hides/shows)
-window.addEventListener('resize', fixViewportHeight);
-window.addEventListener('orientationchange', fixViewportHeight);
-fixViewportHeight();
+        window.addEventListener('resize', fixViewportHeight);
+        window.addEventListener('orientationchange', fixViewportHeight);
+        fixViewportHeight();
     </script>
 </body>
 </html>
