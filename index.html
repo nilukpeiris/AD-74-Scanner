@@ -24,6 +24,7 @@
             margin: 0;
             padding: 20px 10px;
             height: 100vh;
+            height: 100svh;
             overflow: hidden;
             text-transform: uppercase;
             box-sizing: border-box;
@@ -31,7 +32,7 @@
             flex-direction: column;
         }
 
-        /* --- ENTRY & BOOT SCREENS --- */
+        /* --- SCREENS --- */
         #entry-screen {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -71,7 +72,7 @@
         @keyframes scan-v { 0% { left: 0; } 100% { left: 100%; } }
         @keyframes scan-h { 0% { top: 0; } 100% { top: 100%; } }
 
-        /* --- UI COMPONENTS --- */
+        /* --- UI CONTAINER --- */
         .scanner-container {
             flex: 1;
             opacity: 0;
@@ -81,9 +82,10 @@
             padding: 15px;
             background: var(--panel-bg);
             transition: opacity 0.5s ease;
+            overflow: hidden;
         }
 
-        /* --- CAMERA VIZ (50%) --- */
+        /* --- VISUALIZATION AREA (TOP 50%) --- */
         .component-viz {
             flex: 1;
             border: 1px solid rgba(0, 240, 255, 0.2);
@@ -103,21 +105,25 @@
             opacity: 0.6;
         }
 
-        /* --- RE-INTEGRATED HEX SIDEBAR --- */
         .hex-sidebar {
             position: absolute;
             left: 10px; top: 20px; bottom: 20px; width: 60px;
-            font-size: 0.55em; 
-            overflow: hidden;
+            font-size: 0.55em; overflow: hidden;
             border-right: 1px solid rgba(0, 240, 255, 0.2);
-            opacity: 0.6; 
-            text-align: left;
-            line-height: 1.4;
-            z-index: 10;
-            pointer-events: none;
+            opacity: 0.6; text-align: left;
+            line-height: 1.4; z-index: 10;
         }
 
-        /* --- RESULTS SECTION (50%) --- */
+        /* --- CUBE SYSTEM (HIDDEN BY DEFAULT) --- */
+        .loading { display: none; width: 120px; height: 120px; perspective: 1000px; position: relative; z-index: 5; }
+        .cube { width: 80px; height: 80px; position: absolute; top: 20px; left: 20px; transform-style: preserve-3d; animation: rotate 8s infinite linear; }
+        .side { position: absolute; width: 100%; height: 100%; border: 1px solid var(--primary-color); background: rgba(0, 240, 255, 0.08); backface-visibility: visible; }
+        .front { transform: translateZ(40px); } .back { transform: translateZ(-40px) rotateY(180deg); }
+        .top { transform: rotateX(90deg) translateZ(40px); } .bottom { transform: rotateX(-90deg) translateZ(40px); }
+        .left { transform: rotateY(-90deg) translateZ(40px); } .right { transform: rotateY(90deg) translateZ(40px); }
+        @keyframes rotate { from { transform: rotateY(0deg) rotateX(0deg); } to { transform: rotateY(360deg) rotateX(360deg); } }
+
+        /* --- MAIN OUTPUT (BOTTOM 50%) --- */
         main {
             flex: 1;
             display: flex;
@@ -128,14 +134,14 @@
         }
 
         .intel-box { border: 1px solid var(--warning-color); padding: 10px; color: var(--warning-color); background: rgba(255, 204, 0, 0.05); margin-top: 10px; }
-        .status-bar { background: rgba(255, 51, 51, 0.15); padding: 8px; margin: 10px 0; font-size: 0.8em; text-align: center; border: 1px solid var(--alert-color); color: var(--alert-color); }
+        .status-bar { background: rgba(255, 51, 51, 0.15); padding: 8px; margin: 10px 0; font-size: 0.8em; text-align: center; border: 1px solid var(--alert-color); color: var(--alert-color); transition: 0.3s; }
         
         #reset-btn {
-            margin-top: auto;
+            margin-top: 10px;
             background: rgba(255, 51, 51, 0.1);
             color: var(--alert-color);
             border: 1px solid var(--alert-color);
-            padding: 10px;
+            padding: 8px;
             cursor: pointer;
             font-family: 'Space Mono';
             font-size: 0.7em;
@@ -166,6 +172,14 @@
             <div class="hex-sidebar"><div id="hex-data-stream"></div></div>
             
             <video id="camera-feed" autoplay playsinline muted></video>
+
+            <div class="loading" id="threat-cube">
+                <div class="cube">
+                    <div class="side front"></div><div class="side back"></div>
+                    <div class="side top"></div><div class="side bottom"></div>
+                    <div class="side left"></div><div class="side right"></div>
+                </div>
+            </div>
         </section>
 
         <main>
@@ -178,7 +192,9 @@
                     <span>REPORT: AD-74.ZX</span>
                     <span id="match-pct" style="background: var(--warning-color); color: #000; padding: 0 4px; font-weight: bold;">0.0% SYNC</span>
                 </div>
-                <p style="margin: 0; font-size: 0.7em;">Multi-format optical processing active. compatible with QR, Data Matrix, and Aztec signatures.</p>
+                <p id="info-p" style="margin: 0; font-size: 0.7em; text-transform: none; line-height: 1.4;">
+                    Optical signal processing active. Analyzing QR/DataMatrix signatures for payload extraction.
+                </p>
             </div>
 
             <button id="reset-btn">PURGE_DECODED_DATA</button>
@@ -188,9 +204,13 @@
     <script>
         const codeReader = new ZXing.BrowserMultiFormatReader();
         const hexStream = document.getElementById('hex-data-stream');
+        const statusDisplay = document.getElementById('status-display');
+        const decodedOutput = document.getElementById('decoded-output');
+        const matchPct = document.getElementById('match-pct');
+        const infoP = document.getElementById('info-p');
 
-        // REPLICATED HEXADECIMAL LOGIC
-        function updateUI() {
+        // Hex Logic from original file
+        function updateHex() {
             let data = "";
             for(let i=0; i<18; i++) {
                 data += "0x" + Math.floor(Math.random()*256).toString(16).toUpperCase().padStart(2, '0') + " ";
@@ -198,9 +218,7 @@
             }
             hexStream.innerHTML = data;
         }
-
-        // Match original refresh interval (150ms)
-        setInterval(updateUI, 150);
+        setInterval(updateHex, 150);
 
         async function startSystem() {
             try {
@@ -209,12 +227,21 @@
 
                 codeReader.decodeFromVideoDevice(selectedDevice, 'camera-feed', (result, err) => {
                     if (result) {
-                        document.getElementById('decoded-output').innerText = result.getText();
-                        document.getElementById('match-pct').innerText = "100% SYNC";
-                        document.getElementById('status-display').innerText = "DATA EXTRACTED";
+                        const text = result.getText();
+                        decodedOutput.innerText = text;
+
+                        // Trigger Override if "BOMB" is detected
+                        if (text.toUpperCase().includes("BOMB")) {
+                            triggerThreat();
+                        } else {
+                            matchPct.innerText = "100% SYNC";
+                            statusDisplay.innerText = "DATA EXTRACTED";
+                            statusDisplay.style.background = "rgba(0, 240, 255, 0.2)";
+                        }
                     }
                 });
 
+                // Boot Animation
                 document.getElementById('line-v').style.animation = 'scan-v 1s ease-in-out forwards';
                 document.getElementById('line-h').style.animation = 'scan-h 1s ease-in-out forwards 0.5s';
 
@@ -228,6 +255,17 @@
             }
         }
 
+        function triggerThreat() {
+            statusDisplay.innerText = "CRITICAL THREAT DETECTED";
+            statusDisplay.style.background = "var(--alert-color)";
+            statusDisplay.style.color = "#000";
+            document.getElementById('camera-feed').style.display = 'none';
+            document.getElementById('threat-cube').style.display = 'block';
+            matchPct.innerText = "ERROR // 99%";
+            matchPct.style.background = "var(--alert-color)";
+            infoP.innerHTML = "<strong>PROTOCOL AD-74 TRIGGERED:</strong> Hazardous signature identified. Evacuate immediately.";
+        }
+
         document.getElementById('connect-btn').addEventListener('click', () => {
             document.getElementById('entry-screen').style.display = 'none';
             document.getElementById('boot-overlay').style.display = 'flex';
@@ -235,8 +273,15 @@
         });
 
         document.getElementById('reset-btn').addEventListener('click', () => {
-            document.getElementById('decoded-output').innerText = "NO DATA EXTRACTED";
-            document.getElementById('match-pct').innerText = "0.0% SYNC";
+            decodedOutput.innerText = "NO DATA EXTRACTED";
+            matchPct.innerText = "0.0% SYNC";
+            matchPct.style.background = "var(--warning-color)";
+            statusDisplay.innerText = "AWAITING OPTICAL INPUT";
+            statusDisplay.style.background = "rgba(255, 51, 51, 0.15)";
+            statusDisplay.style.color = "var(--alert-color)";
+            document.getElementById('camera-feed').style.display = 'block';
+            document.getElementById('threat-cube').style.display = 'none';
+            infoP.innerText = "Optical signal processing active. Analyzing QR/DataMatrix signatures for payload extraction.";
         });
     </script>
 </body>
