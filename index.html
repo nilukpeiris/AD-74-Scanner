@@ -24,7 +24,6 @@
             margin: 0;
             padding: 20px 10px;
             height: 100vh;
-            height: 100svh;
             overflow: hidden;
             text-transform: uppercase;
             box-sizing: border-box;
@@ -32,7 +31,7 @@
             flex-direction: column;
         }
 
-        /* --- ENTRY BUTTON --- */
+        /* --- ENTRY & BOOT SCREENS --- */
         #entry-screen {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -50,15 +49,11 @@
             color: var(--primary-color);
             border: 1px solid var(--primary-color);
             padding: 15px 30px;
-            font-family: 'Space Mono', monospace;
             cursor: pointer;
-            text-transform: uppercase;
             letter-spacing: 2px;
             box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
-            transition: all 0.3s ease;
         }
 
-        /* --- BOOT SEQUENCE --- */
         .loading-screen {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -69,12 +64,7 @@
             justify-content: center;
         }
 
-        .boot-line-v, .boot-line-h {
-            position: absolute;
-            background: var(--primary-color);
-            box-shadow: 0 0 15px var(--primary-color);
-        }
-
+        .boot-line-v, .boot-line-h { position: absolute; background: var(--primary-color); }
         .boot-line-v { width: 2px; height: 100%; left: 0; }
         .boot-line-h { width: 100%; height: 2px; top: 0; }
 
@@ -86,130 +76,121 @@
             flex: 1;
             opacity: 0;
             border: 2px solid var(--primary-color);
-            min-height: calc(100% - 10px);
             display: flex;
             flex-direction: column;
             padding: 15px;
-            box-sizing: border-box;
             background: var(--panel-bg);
             transition: opacity 0.5s ease;
-            overflow: hidden;
         }
 
-        .crt-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%),
-                        linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
-            background-size: 100% 3px, 3px 100%;
-            pointer-events: none;
-            z-index: 100;
-        }
-
-        /* --- CAMERA AREA (Top 50%) --- */
+        /* --- CAMERA VIZ (50%) --- */
         .component-viz {
-            flex: 1; /* Split 50/50 with <main> */
+            flex: 1;
             border: 1px solid rgba(0, 240, 255, 0.2);
             background: #000;
             margin: 10px 0;
-            overflow: hidden;
             position: relative;
+            overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
-            animation: flicker 0.2s infinite;
         }
 
         #camera-feed {
-            width: 100%;
-            height: 100%;
+            width: 100%; height: 100%;
             object-fit: cover;
-            filter: grayscale(1) contrast(1.2) brightness(0.8) sepia(1) hue-rotate(140deg);
-            opacity: 0.7;
+            filter: grayscale(1) contrast(1.4) brightness(0.8) sepia(1) hue-rotate(140deg);
+            opacity: 0.6;
         }
 
-        /* --- MAIN SECTION (Bottom 50%) --- */
-        main {
-            flex: 1; /* Split 50/50 with .component-viz */
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto;
-            padding-top: 10px;
-            border-top: 1px solid rgba(0, 240, 255, 0.2);
-        }
-
-        @keyframes flicker {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.97; }
-        }
-
+        /* --- RE-INTEGRATED HEX SIDEBAR --- */
         .hex-sidebar {
             position: absolute;
             left: 10px; top: 20px; bottom: 20px; width: 60px;
-            font-size: 0.55em; overflow: hidden;
+            font-size: 0.55em; 
+            overflow: hidden;
             border-right: 1px solid rgba(0, 240, 255, 0.2);
-            opacity: 0.6; text-align: left;
+            opacity: 0.6; 
+            text-align: left;
             line-height: 1.4;
             z-index: 10;
+            pointer-events: none;
         }
 
-        /* --- ANALYSIS BOXES --- */
-        .intel-box { border: 1px solid var(--warning-color); padding: 12px; color: var(--warning-color); background: rgba(255, 204, 0, 0.05); margin-top: 10px; }
+        /* --- RESULTS SECTION (50%) --- */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-top: 1px solid rgba(0, 240, 255, 0.2);
+            padding-top: 10px;
+            overflow-y: auto;
+        }
+
+        .intel-box { border: 1px solid var(--warning-color); padding: 10px; color: var(--warning-color); background: rgba(255, 204, 0, 0.05); margin-top: 10px; }
         .status-bar { background: rgba(255, 51, 51, 0.15); padding: 8px; margin: 10px 0; font-size: 0.8em; text-align: center; border: 1px solid var(--alert-color); color: var(--alert-color); }
-        .substance-tag { flex: 1; background: rgba(0, 240, 255, 0.1); padding: 5px; border-left: 2px solid var(--primary-color); font-size: 0.6em; }
+        
+        #reset-btn {
+            margin-top: auto;
+            background: rgba(255, 51, 51, 0.1);
+            color: var(--alert-color);
+            border: 1px solid var(--alert-color);
+            padding: 10px;
+            cursor: pointer;
+            font-family: 'Space Mono';
+            font-size: 0.7em;
+        }
     </style>
 </head>
 <body>
 
     <div id="entry-screen">
-        <div style="font-size: 0.6em; opacity: 0.5; letter-spacing: 3px;">SECURE ACCESS REQUIRED</div>
         <button id="connect-btn">Connect to Probe AD-74</button>
     </div>
 
     <div class="loading-screen" id="boot-overlay">
         <div class="boot-line-v" id="line-v"></div>
         <div class="boot-line-h" id="line-h"></div>
-        <div style="font-size: 0.8em; letter-spacing: 5px;">INITIALIZING SCAN...</div>
+        <div id="loading-text" style="font-size: 0.8em; letter-spacing: 5px;">SYNCING SENSORS...</div>
     </div>
-
-    <div class="crt-overlay"></div>
 
     <div class="scanner-container" id="main-ui">
         <header style="display: flex; justify-content: space-between; font-size: 0.6em;">
             <div>AD-FORENSICS // PROBE</div>
-            <div id="scan-mode">ST_MODE: MULTI_SCAN</div>
+            <div>ST_MODE: MULTI_SCAN</div>
         </header>
 
-        <div class="status-bar" id="status-display">AWAITING OPTICAL SYMBOL INPUT</div>
+        <div class="status-bar" id="status-display">AWAITING OPTICAL INPUT</div>
 
         <section class="component-viz">
             <div class="hex-sidebar"><div id="hex-data-stream"></div></div>
+            
             <video id="camera-feed" autoplay playsinline muted></video>
         </section>
 
         <main>
-            <div style="font-size: 0.7em; margin-bottom: 5px; color: var(--primary-color);">[DECODER_RESULT // OUTPUT]</div>
             <div id="decoded-output" style="font-weight: bold; border-left: 3px solid var(--alert-color); padding-left: 10px; font-size: 0.9em; word-break: break-all;">
                 NO DATA EXTRACTED
             </div>
 
             <div class="intel-box">
-                <div style="display: flex; justify-content: space-between; font-size: 0.6em; margin-bottom: 8px; border-bottom: 1px solid rgba(255, 204, 0, 0.3); padding-bottom: 4px;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.6em; margin-bottom: 5px;">
                     <span>REPORT: AD-74.ZX</span>
-                    <span id="match-pct" style="color: #000; background: var(--warning-color); padding: 0 4px; font-weight: bold;">0.0% SYNC</span>
+                    <span id="match-pct" style="background: var(--warning-color); color: #000; padding: 0 4px; font-weight: bold;">0.0% SYNC</span>
                 </div>
-                <p id="info-p" style="margin: 0; font-size: 0.72em; text-transform: none; line-height: 1.5; font-style: italic;">
-                    System optimized for Multi-Format Optical Decoding. compatible with QR, Data Matrix, and Aztec signatures.
-                </p>
+                <p style="margin: 0; font-size: 0.7em;">Multi-format optical processing active. compatible with QR, Data Matrix, and Aztec signatures.</p>
             </div>
+
+            <button id="reset-btn">PURGE_DECODED_DATA</button>
         </main>
     </div>
 
     <script>
-        const hexStream = document.getElementById('hex-data-stream');
         const codeReader = new ZXing.BrowserMultiFormatReader();
+        const hexStream = document.getElementById('hex-data-stream');
 
-        function updateHex() {
+        // REPLICATED HEXADECIMAL LOGIC
+        function updateUI() {
             let data = "";
             for(let i=0; i<18; i++) {
                 data += "0x" + Math.floor(Math.random()*256).toString(16).toUpperCase().padStart(2, '0') + " ";
@@ -217,38 +198,46 @@
             }
             hexStream.innerHTML = data;
         }
-        setInterval(updateHex, 150);
 
-        function startDecoding() {
-            codeReader.decodeFromVideoDevice(null, 'camera-feed', (result, err) => {
-                if (result) {
-                    document.getElementById('decoded-output').innerText = result.getText();
-                    document.getElementById('match-pct').innerText = "100% SYNC";
-                }
-            });
+        // Match original refresh interval (150ms)
+        setInterval(updateUI, 150);
+
+        async function startSystem() {
+            try {
+                const videoDevices = await codeReader.listVideoInputDevices();
+                const selectedDevice = videoDevices[0].deviceId;
+
+                codeReader.decodeFromVideoDevice(selectedDevice, 'camera-feed', (result, err) => {
+                    if (result) {
+                        document.getElementById('decoded-output').innerText = result.getText();
+                        document.getElementById('match-pct').innerText = "100% SYNC";
+                        document.getElementById('status-display').innerText = "DATA EXTRACTED";
+                    }
+                });
+
+                document.getElementById('line-v').style.animation = 'scan-v 1s ease-in-out forwards';
+                document.getElementById('line-h').style.animation = 'scan-h 1s ease-in-out forwards 0.5s';
+
+                setTimeout(() => {
+                    document.getElementById('boot-overlay').style.display = 'none';
+                    document.getElementById('main-ui').style.opacity = '1';
+                }, 2000);
+
+            } catch (err) {
+                document.getElementById('loading-text').innerText = "ERROR: CAMERA BLOCKED";
+            }
         }
 
         document.getElementById('connect-btn').addEventListener('click', () => {
-            if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
             document.getElementById('entry-screen').style.display = 'none';
             document.getElementById('boot-overlay').style.display = 'flex';
-            document.getElementById('line-v').style.animation = 'scan-v 1s ease-in-out forwards 0.2s';
-            document.getElementById('line-h').style.animation = 'scan-h 1s ease-in-out forwards 0.9s';
-
-            setTimeout(() => {
-                document.getElementById('boot-overlay').style.display = 'none';
-                document.getElementById('main-ui').style.opacity = '1';
-                startDecoding();
-            }, 2200);
+            startSystem();
         });
 
-        const fixViewportHeight = () => {
-            document.body.style.height = `${window.innerHeight}px`;
-        };
-
-        window.addEventListener('resize', fixViewportHeight);
-        window.addEventListener('orientationchange', fixViewportHeight);
-        fixViewportHeight();
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            document.getElementById('decoded-output').innerText = "NO DATA EXTRACTED";
+            document.getElementById('match-pct').innerText = "0.0% SYNC";
+        });
     </script>
 </body>
 </html>
