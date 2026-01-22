@@ -220,33 +220,33 @@
 
 // --- SCAN LIBRARY (DATABASE) ---
         const SCAN_LIBRARY = {
-            "BOMB": {
+            "EXPLOSIVES DETECTED": {
                 status: "CRITICAL THREAT DETECTED",
                 color: "var(--alert-color)",
-                info: "<strong>PROTOCOL AD-74:</strong> Hazardous signature. High-yield compound detected.",
+                info: "<strong>PROTOCOL AD-74:</strong> Class-4 controlled molecular shearing markers. Nano-particulate Accelerant [IS-109]. Barium-Nitrate residue. detected.",
                 shape: "cube",
-                sync: "ERROR // 99%"
+                sync: "CONFIDENCE // 89%"
             },
             "BIOHAZARD": {
                 status: "PATHOGEN DETECTED",
-                color: "#39ff14",
+                color: "var(--alert-color)",
                 info: "<strong>SENSORS ACTIVE:</strong> Airborne biological agent identified. Seal localized vents.",
                 shape: "pyramid",
                 sync: "SYNC // 82%"
             },
-            "INTACT": {
-                status: "STRUCTURAL SCAN: OK",
+            "INTACT HULL SEGMENT": {
+                status: "STRUCTURAL SCAN: NOMINAL",
                 color: "var(--primary-color)",
-                info: "<strong>INTEGRITY:</strong> 100%. No stress fractures or surface damage detected in section 7.",
+                info: "<strong>INTEGRITY:</strong> 100%. No stress fractures or surface damage detected.",
                 shape: "intact",
-                sync: "100% SYNC"
+                sync: "CONFIDENCE // 100%"
             },
-            "BROKEN": {
-                status: "STRUCTURAL FAILURE",
+            "DAMAGED HULL SEGMENT": {
+                status: "STRUCTURAL SCAN: FAILURE",
                 color: "var(--alert-color)",
-                info: "<strong>WARNING:</strong> Compromised hull integrity. Major stress fractures detected. Core venting.",
+                info: "<strong>WARNING:</strong> Compromised hull integrity. Major stress fractures detected. Venting life support.",
                 shape: "broken",
-                sync: "31% SYNC"
+                sync: "CONFIDENCE // 78%"
             },
             "CLEARANCE": {
                 status: "ACCESS GRANTED // LEVEL 4",
