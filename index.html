@@ -6,7 +6,6 @@
     <title>AD-74 // DEEP SCAN OUTPUT</title>
     <script src="https://unpkg.com/@zxing/library@latest"></script>
     <style>
-        /* --- CORE AESTHETICS --- */
         @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
 
         :root {
@@ -21,48 +20,28 @@
             background-color: var(--bg-color);
             color: var(--primary-color);
             font-family: 'Space Mono', monospace;
-            margin: 0;
-            padding: 20px 10px;
-            height: 100vh;
-            height: 100svh;
-            overflow: hidden;
-            text-transform: uppercase;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
+            margin: 0; padding: 20px 10px; height: 100vh; height: 100svh;
+            overflow: hidden; text-transform: uppercase; box-sizing: border-box;
+            display: flex; flex-direction: column;
         }
 
         /* --- SCREENS --- */
         #entry-screen {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg-color);
-            z-index: 300;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 20px;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-color); z-index: 300;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
         }
 
         #connect-btn {
-            background: transparent;
-            color: var(--primary-color);
-            border: 1px solid var(--primary-color);
-            padding: 15px 30px;
-            cursor: pointer;
-            letter-spacing: 2px;
+            background: transparent; color: var(--primary-color); border: 1px solid var(--primary-color);
+            padding: 15px 30px; cursor: pointer; letter-spacing: 2px;
             box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
         }
 
         .loading-screen {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg-color);
-            z-index: 200;
-            display: none;
-            align-items: center;
-            justify-content: center;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-color); z-index: 200;
+            display: none; align-items: center; justify-content: center;
         }
 
         .boot-line-v, .boot-line-h { position: absolute; background: var(--primary-color); }
@@ -72,80 +51,98 @@
         @keyframes scan-v { 0% { left: 0; } 100% { left: 100%; } }
         @keyframes scan-h { 0% { top: 0; } 100% { top: 100%; } }
 
-        /* --- UI CONTAINER --- */
         .scanner-container {
-            flex: 1;
-            opacity: 0;
-            border: 2px solid var(--primary-color);
-            display: flex;
-            flex-direction: column;
-            padding: 15px;
-            background: var(--panel-bg);
-            transition: opacity 0.5s ease;
-            overflow: hidden;
+            flex: 1; opacity: 0; border: 2px solid var(--primary-color);
+            display: flex; flex-direction: column; padding: 15px;
+            background: var(--panel-bg); transition: opacity 0.5s ease; overflow: hidden;
         }
 
-        /* --- VISUALIZATION AREA (TOP 50%) --- */
+        /* --- VISUALIZATION AREA --- */
         .component-viz {
-            flex: 1;
-            border: 1px solid rgba(0, 240, 255, 0.2);
-            background: #000;
-            margin: 10px 0;
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            flex: 1; border: 1px solid rgba(0, 240, 255, 0.2);
+            background: #000; margin: 10px 0; position: relative;
+            overflow: hidden; display: flex; justify-content: center; align-items: center;
         }
 
         #camera-feed {
-            width: 100%; height: 100%;
-            object-fit: cover;
-            filter: grayscale(1) contrast(1.4) brightness(0.8) sepia(1) hue-rotate(140deg);
-            opacity: 0.6;
+            width: 100%; height: 100%; object-fit: cover;
+            filter: grayscale(1) contrast(1.4) brightness(0.8) sepia(1) hue-rotate(140deg); opacity: 0.6;
         }
 
         .hex-sidebar {
-            position: absolute;
-            left: 10px; top: 20px; bottom: 20px; width: 60px;
-            font-size: 0.55em; overflow: hidden;
-            border-right: 1px solid rgba(0, 240, 255, 0.2);
-            opacity: 0.6; text-align: left;
-            line-height: 1.4; z-index: 10;
+            position: absolute; left: 10px; top: 20px; bottom: 20px; width: 60px;
+            font-size: 0.55em; overflow: hidden; border-right: 1px solid rgba(0, 240, 255, 0.2);
+            opacity: 0.6; text-align: left; line-height: 1.4; z-index: 10;
         }
 
-        /* --- CUBE SYSTEM (HIDDEN BY DEFAULT) --- */
+        /* --- THREAT VISUALS --- */
         .loading { display: none; width: 120px; height: 120px; perspective: 1000px; position: relative; z-index: 5; }
-        .cube { width: 80px; height: 80px; position: absolute; top: 20px; left: 20px; transform-style: preserve-3d; animation: rotate 8s infinite linear; }
-        .side { position: absolute; width: 100%; height: 100%; border: 1px solid var(--primary-color); background: rgba(0, 240, 255, 0.08); backface-visibility: visible; }
+        
+        @keyframes rotate { from { transform: rotateY(0deg) rotateX(20deg); } to { transform: rotateY(360deg) rotateX(20deg); } }
+
+        /* UNIVERSAL SIDE STYLE */
+        .side { 
+            position: absolute; border: 1px solid var(--primary-color); 
+            background: rgba(0, 240, 255, 0.08); display: flex; align-items: center; justify-content: center; font-size: 10px; 
+        }
+
+        /* HULL PLATE DIMENSIONS (100x100x10) */
+        .f-front  { width: 100px; height: 100px; transform: translateZ(5px); }
+        .f-back   { width: 100px; height: 100px; transform: translateZ(-5px) rotateY(180deg); }
+        .f-top    { width: 100px; height: 10px; transform: rotateX(90deg) translateZ(5px); }
+        .f-bottom { width: 100px; height: 10px; transform: rotateX(-90deg) translateZ(95px); }
+        .f-left   { width: 10px;  height: 100px; transform: rotateY(-90deg) translateZ(5px); }
+        .f-right  { width: 10px;  height: 100px; transform: rotateY(90deg) translateZ(95px); }
+
+        /* CUBE STYLE (80x80x80) */
+        .cube { display: none; width: 80px; height: 80px; position: absolute; top: 20px; left: 20px; transform-style: preserve-3d; animation: rotate 8s infinite linear; }
+        .c-side { position: absolute; width: 80px; height: 80px; border: 1px solid var(--primary-color); background: rgba(0, 240, 255, 0.08); display: flex; align-items: center; justify-content: center; font-size: 10px; }
         .front { transform: translateZ(40px); } .back { transform: translateZ(-40px) rotateY(180deg); }
         .top { transform: rotateX(90deg) translateZ(40px); } .bottom { transform: rotateX(-90deg) translateZ(40px); }
         .left { transform: rotateY(-90deg) translateZ(40px); } .right { transform: rotateY(90deg) translateZ(40px); }
-        @keyframes rotate { from { transform: rotateY(0deg) rotateX(0deg); } to { transform: rotateY(360deg) rotateX(360deg); } }
 
-        /* --- MAIN OUTPUT (BOTTOM 50%) --- */
-        main {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            border-top: 1px solid rgba(0, 240, 255, 0.2);
-            padding-top: 10px;
-            overflow-y: auto;
+        /* PYRAMID STYLE */
+        .pyramid { display: none; width: 100px; height: 100px; position: absolute; top: 10px; left: 10px; transform-style: preserve-3d; animation: rotate 5s infinite linear; }
+        .p-side {
+            position: absolute; width: 0; height: 0;
+            border-left: 50px solid transparent; border-right: 50px solid transparent;
+            border-bottom: 90px solid rgba(0, 240, 255, 0.2); border-top: none;
+            display: flex; align-items: center; justify-content: center; color: var(--primary-color);
+        }
+        .p-front { transform: rotateY(0deg) translateZ(25px) rotateX(30deg); transform-origin: 50% 100%; }
+        .p-back  { transform: rotateY(180deg) translateZ(25px) rotateX(30deg); transform-origin: 50% 100%; }
+        .p-left  { transform: rotateY(-90deg) translateZ(25px) rotateX(30deg); transform-origin: 50% 100%; }
+        .p-right { transform: rotateY(90deg) translateZ(25px) rotateX(30deg); transform-origin: 50% 100%; }
+
+        /* HULL PLATE CONTAINERS */
+        .hull-intact { display: none; width: 100px; height: 100px; position: absolute; top: 10px; left: 10px; transform-style: preserve-3d; animation: rotate 8s infinite linear; }
+        
+        .hull-broken { display: none; width: 100px; height: 100px; position: absolute; top: 10px; left: 10px; transform-style: preserve-3d; animation: rotate 8s infinite linear; }
+        .hull-broken .side {
+            border-color: var(--alert-color); color: var(--alert-color);
+            background: radial-gradient(circle, rgba(255, 51, 51, 0.2) 0%, rgba(255, 51, 51, 0.05) 100%);
+            animation: danger-pulse 1.5s infinite ease-in-out;
         }
 
+        @keyframes danger-pulse {
+            0%, 100% { box-shadow: inset 0 0 10px rgba(255, 51, 51, 0.5); border-color: rgba(255, 51, 51, 1); }
+            50% { box-shadow: inset 0 0 30px rgba(255, 51, 51, 0.8); border-color: rgba(255, 51, 51, 0.4); }
+        }
+
+        .core-singularity {
+            position: absolute; top: 50%; left: 50%; width: 8px; height: 8px; 
+            background: #fff; border-radius: 50%; transform: translate(-50%, -50%);
+            box-shadow: 0 0 20px 5px var(--alert-color); animation: core-pulse 1.5s infinite ease-in-out;
+            z-index: 6; display: none;
+        }
+
+        @keyframes core-pulse { 0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; } 50% { transform: translate(-50%, -50%) scale(2.5); opacity: 1; } }
+
+        /* --- UI CONTROLS --- */
+        main { flex: 1; display: flex; flex-direction: column; border-top: 1px solid rgba(0, 240, 255, 0.2); padding-top: 10px; overflow-y: auto; }
         .intel-box { border: 1px solid var(--warning-color); padding: 10px; color: var(--warning-color); background: rgba(255, 204, 0, 0.05); margin-top: 10px; }
         .status-bar { background: rgba(255, 51, 51, 0.15); padding: 8px; margin: 10px 0; font-size: 0.8em; text-align: center; border: 1px solid var(--alert-color); color: var(--alert-color); transition: 0.3s; }
-        
-        #reset-btn {
-            margin-top: 10px;
-            background: rgba(255, 51, 51, 0.1);
-            color: var(--alert-color);
-            border: 1px solid var(--alert-color);
-            padding: 8px;
-            cursor: pointer;
-            font-family: 'Space Mono';
-            font-size: 0.7em;
-        }
+        #reset-btn { margin-top: 10px; background: rgba(255, 51, 51, 0.1); color: var(--alert-color); border: 1px solid var(--alert-color); padding: 8px; cursor: pointer; font-family: 'Space Mono'; font-size: 0.7em; }
     </style>
 </head>
 <body>
@@ -170,14 +167,32 @@
 
         <section class="component-viz">
             <div class="hex-sidebar"><div id="hex-data-stream"></div></div>
-            
             <video id="camera-feed" autoplay playsinline muted></video>
 
-            <div class="loading" id="threat-cube">
-                <div class="cube">
-                    <div class="side front"></div><div class="side back"></div>
-                    <div class="side top"></div><div class="side bottom"></div>
-                    <div class="side left"></div><div class="side right"></div>
+            <div class="loading" id="threat-viz">
+                <div class="core-singularity" id="core"></div>
+                
+                <div class="cube" id="viz-cube">
+                    <div class="c-side front"></div><div class="c-side back"></div>
+                    <div class="c-side top"></div><div class="c-side bottom"></div>
+                    <div class="c-side left"></div><div class="c-side right"></div>
+                </div>
+
+                <div class="pyramid" id="viz-pyramid">
+                    <div class="p-side p-front"></div><div class="p-side p-back"></div>
+                    <div class="p-side p-left"></div><div class="p-side p-right"></div>
+                </div>
+
+                <div class="hull-intact" id="viz-intact">
+                    <div class="side f-front"></div><div class="side f-back"></div>
+                    <div class="side f-top"></div><div class="side f-bottom"></div>
+                    <div class="side f-left"></div><div class="side f-right"></div>
+                </div>
+
+                <div class="hull-broken" id="viz-broken">
+                    <div class="side f-front"></div><div class="side f-back"></div>
+                    <div class="side f-top"></div><div class="side f-bottom"></div>
+                    <div class="side f-left"></div><div class="side f-right"></div>
                 </div>
             </div>
         </section>
@@ -186,17 +201,13 @@
             <div id="decoded-output" style="font-weight: bold; border-left: 3px solid var(--alert-color); padding-left: 10px; font-size: 0.9em; word-break: break-all;">
                 NO DATA EXTRACTED
             </div>
-
             <div class="intel-box">
                 <div style="display: flex; justify-content: space-between; font-size: 0.6em; margin-bottom: 5px;">
                     <span>REPORT: AD-74.ZX</span>
                     <span id="match-pct" style="background: var(--warning-color); color: #000; padding: 0 4px; font-weight: bold;">0.0% SYNC</span>
                 </div>
-                <p id="info-p" style="margin: 0; font-size: 0.7em; text-transform: none; line-height: 1.4;">
-                    Optical signal processing active. Analyzing QR/DataMatrix signatures for payload extraction.
-                </p>
+                <p id="info-p" style="margin: 0; font-size: 0.7em; line-height: 1.4;">Analyzing optical signatures for payload extraction...</p>
             </div>
-
             <button id="reset-btn">PURGE_DECODED_DATA</button>
         </main>
     </div>
@@ -204,84 +215,139 @@
     <script>
         const codeReader = new ZXing.BrowserMultiFormatReader();
         const hexStream = document.getElementById('hex-data-stream');
-        const statusDisplay = document.getElementById('status-display');
-        const decodedOutput = document.getElementById('decoded-output');
-        const matchPct = document.getElementById('match-pct');
-        const infoP = document.getElementById('info-p');
+        const phoenixChars = ["\uD802\uDD00", "\uD802\uDD01", "\uD802\uDD02", "\uD802\uDD03", "\uD802\uDD04", "\uD802\uDD05", "\uD802\uDD06", "\uD802\uDD07", "\uD802\uDD08"];
+        let isThreatActive = false;
 
-        // Hex Logic from original file
-        function updateHex() {
+// --- SCAN LIBRARY (DATABASE) ---
+        const SCAN_LIBRARY = {
+            "BOMB": {
+                status: "CRITICAL THREAT DETECTED",
+                color: "var(--alert-color)",
+                info: "<strong>PROTOCOL AD-74:</strong> Hazardous signature. High-yield compound detected.",
+                shape: "cube",
+                sync: "ERROR // 99%"
+            },
+            "BIOHAZARD": {
+                status: "PATHOGEN DETECTED",
+                color: "#39ff14",
+                info: "<strong>SENSORS ACTIVE:</strong> Airborne biological agent identified. Seal localized vents.",
+                shape: "pyramid",
+                sync: "SYNC // 82%"
+            },
+            "INTACT": {
+                status: "STRUCTURAL SCAN: OK",
+                color: "var(--primary-color)",
+                info: "<strong>INTEGRITY:</strong> 100%. No stress fractures or surface damage detected in section 7.",
+                shape: "intact",
+                sync: "100% SYNC"
+            },
+            "BROKEN": {
+                status: "STRUCTURAL FAILURE",
+                color: "var(--alert-color)",
+                info: "<strong>WARNING:</strong> Compromised hull integrity. Major stress fractures detected. Core venting.",
+                shape: "broken",
+                sync: "31% SYNC"
+            },
+            "CLEARANCE": {
+                status: "ACCESS GRANTED // LEVEL 4",
+                color: "var(--primary-color)",
+                info: "<strong>ENCRYPTION KEY:</strong> valid. Personnel file AD-909 decrypted. Welcome, Director.",
+                shape: null,
+                sync: "100% SYNC"
+            },
+            "VOID": {
+                status: "NULL SIGNAL DETECTED",
+                color: "#ffffff",
+                info: "<strong>DATA CORRUPTION:</strong> The scanned matrix contains no readable forensic trail.",
+                shape: "pyramid",
+                sync: "0.0% SYNC"
+            }
+        };
+
+        function updateUI() {
             let data = "";
             for(let i=0; i<18; i++) {
                 data += "0x" + Math.floor(Math.random()*256).toString(16).toUpperCase().padStart(2, '0') + " ";
                 if(i % 2 !== 0) data += "<br>";
             }
             hexStream.innerHTML = data;
+
+            document.querySelectorAll('.side, .c-side, .p-side').forEach(f => {
+                if(Math.random() > 0.9) f.innerText = phoenixChars[Math.floor(Math.random()*phoenixChars.length)];
+            });
         }
-        setInterval(updateHex, 150);
+        setInterval(updateUI, 150);
 
         async function startSystem() {
             try {
                 const videoDevices = await codeReader.listVideoInputDevices();
                 const selectedDevice = videoDevices[0].deviceId;
+                codeReader.decodeFromVideoDevice(selectedDevice, 'camera-feed', (result) => {
+                    if (result && !isThreatActive) {
+                        const text = result.getText().toUpperCase();
+                        document.getElementById('decoded-output').innerText = text;
 
-                codeReader.decodeFromVideoDevice(selectedDevice, 'camera-feed', (result, err) => {
-                    if (result) {
-                        const text = result.getText();
-                        decodedOutput.innerText = text;
-
-                        // Trigger Override if "BOMB" is detected
-                        if (text.toUpperCase().includes("BOMB")) {
-                            triggerThreat();
+                        if (SCAN_LIBRARY[text]) {
+                            applyScanResult(SCAN_LIBRARY[text]);
                         } else {
-                            matchPct.innerText = "100% SYNC";
-                            statusDisplay.innerText = "DATA EXTRACTED";
-                            statusDisplay.style.background = "rgba(0, 240, 255, 0.2)";
+                            document.getElementById('status-display').innerText = "DATA EXTRACTED";
+                            document.getElementById('status-display').style.background = "rgba(0, 240, 255, 0.2)";
+                            document.getElementById('match-pct').innerText = "100% SYNC";
                         }
                     }
                 });
+                document.getElementById('line-v').style.animation = 'scan-v 1s forwards';
+                document.getElementById('line-h').style.animation = 'scan-h 1s forwards 0.5s';
+                setTimeout(() => { document.getElementById('boot-overlay').style.display = 'none'; document.getElementById('main-ui').style.opacity = '1'; }, 2000);
+            } catch (err) { document.getElementById('loading-text').innerText = "ERROR: CAMERA BLOCKED"; }
+        }
 
-                // Boot Animation
-                document.getElementById('line-v').style.animation = 'scan-v 1s ease-in-out forwards';
-                document.getElementById('line-h').style.animation = 'scan-h 1s ease-in-out forwards 0.5s';
+        function applyScanResult(data) {
+            const status = document.getElementById('status-display');
+            status.innerText = data.status;
+            status.style.background = data.color;
+            status.style.color = (data.color === "#ffffff") ? "#000" : "";
+            
+            document.getElementById('match-pct').innerText = data.sync;
+            document.getElementById('match-pct').style.background = data.color;
+            document.getElementById('info-p').innerHTML = data.info;
 
-                setTimeout(() => {
-                    document.getElementById('boot-overlay').style.display = 'none';
-                    document.getElementById('main-ui').style.opacity = '1';
-                }, 2000);
-
-            } catch (err) {
-                document.getElementById('loading-text').innerText = "ERROR: CAMERA BLOCKED";
+            if (data.shape) {
+                isThreatActive = true;
+                document.getElementById('camera-feed').style.display = 'none';
+                document.getElementById('threat-viz').style.display = 'block';
+                document.getElementById('core').style.display = (data.shape === 'broken' || data.shape === 'cube') ? 'block' : 'none';
+                
+                document.getElementById('viz-cube').style.display = (data.shape === 'cube') ? 'block' : 'none';
+                document.getElementById('viz-pyramid').style.display = (data.shape === 'pyramid') ? 'block' : 'none';
+                document.getElementById('viz-intact').style.display = (data.shape === 'intact') ? 'block' : 'none';
+                document.getElementById('viz-broken').style.display = (data.shape === 'broken') ? 'block' : 'none';
             }
         }
 
-        function triggerThreat() {
-            statusDisplay.innerText = "CRITICAL THREAT DETECTED";
-            statusDisplay.style.background = "var(--alert-color)";
-            statusDisplay.style.color = "#000";
-            document.getElementById('camera-feed').style.display = 'none';
-            document.getElementById('threat-cube').style.display = 'block';
-            matchPct.innerText = "ERROR // 99%";
-            matchPct.style.background = "var(--alert-color)";
-            infoP.innerHTML = "<strong>PROTOCOL AD-74 TRIGGERED:</strong> Hazardous signature identified. Evacuate immediately.";
-        }
-
-        document.getElementById('connect-btn').addEventListener('click', () => {
-            document.getElementById('entry-screen').style.display = 'none';
-            document.getElementById('boot-overlay').style.display = 'flex';
-            startSystem();
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            isThreatActive = false;
+            document.getElementById('decoded-output').innerText = "NO DATA EXTRACTED";
+            document.getElementById('match-pct').innerText = "0.0% SYNC";
+            document.getElementById('match-pct').style.background = "var(--warning-color)";
+            document.getElementById('info-p').innerText = "Analyzing optical signatures for payload extraction...";
+            document.getElementById('camera-feed').style.display = 'block';
+            document.getElementById('threat-viz').style.display = 'none';
+            
+            const status = document.getElementById('status-display');
+            status.innerText = "SYSTEM PURGED // READY";
+            status.style.background = "#fff"; status.style.color = "#000";
+            setTimeout(() => {
+                status.innerText = "AWAITING OPTICAL INPUT";
+                status.style.background = "rgba(255, 51, 51, 0.15)";
+                status.style.color = "var(--alert-color)";
+            }, 600);
         });
 
-        document.getElementById('reset-btn').addEventListener('click', () => {
-            decodedOutput.innerText = "NO DATA EXTRACTED";
-            matchPct.innerText = "0.0% SYNC";
-            matchPct.style.background = "var(--warning-color)";
-            statusDisplay.innerText = "AWAITING OPTICAL INPUT";
-            statusDisplay.style.background = "rgba(255, 51, 51, 0.15)";
-            statusDisplay.style.color = "var(--alert-color)";
-            document.getElementById('camera-feed').style.display = 'block';
-            document.getElementById('threat-cube').style.display = 'none';
-            infoP.innerText = "Optical signal processing active. Analyzing QR/DataMatrix signatures for payload extraction.";
+        document.getElementById('connect-btn').addEventListener('click', () => { 
+            document.getElementById('entry-screen').style.display = 'none'; 
+            document.getElementById('boot-overlay').style.display = 'flex'; 
+            startSystem(); 
         });
     </script>
 </body>
