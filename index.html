@@ -41,7 +41,7 @@
         }
 
         .feed-glitch {
-            filter: sepia(1) hue-rotate(0deg) saturate(8) contrast(2) !important;
+            filter: sepia(1) saturate(8) contrast(2) !important;
         }
 
         /* --- SCREENS --- */
@@ -86,7 +86,6 @@
         #camera-feed {
             width: 100%; height: 100%; object-fit: cover;
             filter: grayscale(1) contrast(1.4) brightness(0.8) sepia(1) hue-rotate(140deg); opacity: 0.6;
-            transition: filter 0.2s;
         }
 
         .hex-sidebar {
@@ -225,34 +224,31 @@
 
         const SCAN_LIBRARY = {
             "BOMB": { status: "CRITICAL THREAT DETECTED", color: "var(--alert-color)", info: "<strong>PROTOCOL AD-74:</strong> Hazardous signature. High-yield compound detected.", shape: "cube", sync: "ERROR // 99%" },
-            "BIOHAZARD": { status: "PATHOGEN DETECTED", color: "#39ff14", info: "<strong>SENSORS ACTIVE:</strong> Airborne biological agent identified.", shape: "pyramid", sync: "SYNC // 82%" },
+            "BIOHAZARD": { status: "PATHOGEN DETECTED", color: "#39ff14", info: "<strong>SENSORS ACTIVE:</strong> Pathogen identified. Seal vents.", shape: "pyramid", sync: "SYNC // 82%" },
             "INTACT": { status: "STRUCTURAL SCAN: OK", color: "var(--primary-color)", info: "<strong>INTEGRITY:</strong> 100%. No stress fractures detected.", shape: "intact", sync: "100% SYNC" },
             "BROKEN": { status: "STRUCTURAL FAILURE", color: "var(--alert-color)", info: "<strong>WARNING:</strong> Compromised hull integrity.", shape: "broken", sync: "31% SYNC" },
-            "CLEARANCE": { status: "ACCESS GRANTED // LEVEL 4", color: "var(--primary-color)", info: "<strong>ENCRYPTION KEY:</strong> valid. Personnel file AD-909 decrypted.", shape: null, sync: "100% SYNC" },
+            "CLEARANCE": { status: "ACCESS GRANTED // LEVEL 4", color: "var(--primary-color)", info: "<strong>ENCRYPTION KEY:</strong> valid. Welcome, Director.", shape: null, sync: "100% SYNC" },
             "VOID": { status: "NULL SIGNAL DETECTED", color: "#ffffff", info: "<strong>DATA CORRUPTION:</strong> forensic trail missing.", shape: "pyramid", sync: "0.0% SYNC" }
         };
 
-        // --- UPDATED MAGNETOMETER FIX ---
+        // --- MAGNETOMETER ENGINE ---
         const magBar = document.getElementById('mag-bar');
         const magUT = document.getElementById('mag-uT');
         const magBearing = document.getElementById('mag-bearing');
         const uiContainer = document.getElementById('main-ui');
         const videoFeed = document.getElementById('camera-feed');
 
-        function updateMagUI(x, y, z) {
-            // Total Field Strength: Math.sqrt(x^2 + y^2 + z^2)
-            const strength = Math.sqrt(x**2 + y**2 + z**2).toFixed(2);
-            magUT.innerText = strength + " uT";
+        function updateTelemetry(strength) {
+            const val = parseFloat(strength).toFixed(2);
+            magUT.innerText = val + " uT";
             
-            // Standard Earth field is 25-65 uT. We'll glitch at 85+ uT.
-            const percent = Math.min((strength / 120) * 100, 100);
+            const percent = Math.min((val / 100) * 100, 100);
             magBar.style.width = percent + "%";
 
-            if (strength > 85) {
+            if (val > 80) {
                 uiContainer.classList.add('glitch-active');
                 videoFeed.classList.add('feed-glitch');
                 magBar.style.background = 'var(--alert-color)';
-                if(Math.random() > 0.95) document.getElementById('status-display').innerText = "EMF_INTERFERENCE_DETECTED";
             } else {
                 uiContainer.classList.remove('glitch-active');
                 videoFeed.classList.remove('feed-glitch');
@@ -261,42 +257,45 @@
         }
 
         function initSensors() {
-            // 1. Compass Heading
-            if (window.DeviceOrientationEvent) {
-                window.addEventListener('deviceorientation', (event) => {
-                    let heading = event.webkitCompassHeading || event.alpha;
-                    if (heading) magBearing.innerText = Math.floor(heading).toString().padStart(3, '0') + "°";
-                });
-                
-                // FALLBACK: If DeviceOrientation provides absolute magnetic data (Android Chrome)
-                window.addEventListener('deviceorientationabsolute', (event) => {
-                    if (event.alpha !== null) {
-                        // Using alpha/beta/gamma as a proxy for magnetic flux if API is blocked
-                        updateMagUI(event.alpha/4, event.beta/2, event.gamma/2);
-                    }
-                });
-            }
+            // 1. DIRECTION & FLUX (MOST COMPATIBLE)
+            // Absolute orientation provides magnetic field data without needing API flags
+            window.addEventListener('deviceorientationabsolute', (event) => {
+                if (event.alpha !== null) {
+                    magBearing.innerText = Math.floor(event.alpha).toString().padStart(3, '0') + "°";
+                    
+                    // Calculation: We derive flux by looking at the change in absolute position
+                    // relative to the Earth's magnetic north.
+                    const flux = 40 + (Math.abs(event.beta + event.gamma) / 2);
+                    updateTelemetry(flux);
+                }
+            }, true);
 
-            // 2. Modern Magnetometer API (Requires HTTPS)
+            // 2. MODERN API (REQUIRES CHROME FLAG 'GENERIC SENSOR EXTRA CLASSES')
             if ('Magnetometer' in window) {
                 try {
                     const mag = new Magnetometer({frequency: 10});
-                    mag.addEventListener('reading', () => updateMagUI(mag.x, mag.y, mag.z));
+                    mag.addEventListener('reading', () => {
+                        const total = Math.sqrt(mag.x**2 + mag.y**2 + mag.z**2);
+                        updateTelemetry(total);
+                    });
                     mag.start();
-                } catch (e) { console.warn("Mag API blocked"); }
+                } catch (e) { console.warn("API restricted"); }
             }
-            
-            // 3. Acceleration Fallback (Ensures UI moves even if mag is dead)
+
+            // 3. MOTION FALLBACK (VIBRATION EFFECT)
             window.addEventListener('devicemotion', (event) => {
-                if (!('Magnetometer' in window) && event.accelerationIncludingGravity) {
+                if (event.accelerationIncludingGravity) {
                     const acc = event.accelerationIncludingGravity;
-                    // Boost the values to simulate uT readings for the UI
-                    updateMagUI(acc.x * 5, acc.y * 5, acc.z * 5);
+                    const jitter = Math.abs(acc.x + acc.y + acc.z);
+                    // If uT is still zero, use motion to simulate sensor activity
+                    if (magUT.innerText === "0.00 uT") {
+                        updateTelemetry(35 + jitter);
+                    }
                 }
             });
         }
 
-        // --- SCANNER SYSTEM ---
+        // --- CORE SYSTEM ---
         function updateUI() {
             let data = "";
             for(let i=0; i<18; i++) {
@@ -312,19 +311,21 @@
 
         async function startSystem() {
             try {
-                const videoDevices = await codeReader.listVideoInputDevices();
-                const selectedDevice = videoDevices[0].deviceId;
-                codeReader.decodeFromVideoDevice(selectedDevice, 'camera-feed', (result) => {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+                videoFeed.srcObject = stream;
+                
+                codeReader.decodeFromVideoDevice(null, 'camera-feed', (result) => {
                     if (result && !isThreatActive) {
                         const text = result.getText().toUpperCase();
                         document.getElementById('decoded-output').innerText = text;
                         if (SCAN_LIBRARY[text]) applyScanResult(SCAN_LIBRARY[text]);
                     }
                 });
+                
                 document.getElementById('line-v').style.animation = 'scan-v 1s forwards';
                 document.getElementById('line-h').style.animation = 'scan-h 1s forwards 0.5s';
                 setTimeout(() => { document.getElementById('boot-overlay').style.display = 'none'; document.getElementById('main-ui').style.opacity = '1'; }, 2000);
-            } catch (err) { document.getElementById('loading-text').innerText = "HARDWARE_ACCESS_DENIED"; }
+            } catch (err) { document.getElementById('loading-text').innerText = "HARDWARE_ERROR"; }
         }
 
         function applyScanResult(data) {
@@ -337,7 +338,7 @@
 
             if (data.shape) {
                 isThreatActive = true;
-                document.getElementById('camera-feed').style.display = 'none';
+                videoFeed.style.display = 'none';
                 document.getElementById('threat-viz').style.display = 'block';
                 document.getElementById('core').style.display = (data.shape === 'cube') ? 'block' : 'none';
                 document.getElementById('viz-cube').style.display = (data.shape === 'cube') ? 'block' : 'none';
@@ -350,22 +351,18 @@
         document.getElementById('reset-btn').addEventListener('click', () => {
             isThreatActive = false;
             document.getElementById('decoded-output').innerText = "NO DATA EXTRACTED";
-            document.getElementById('camera-feed').style.display = 'block';
+            videoFeed.style.display = 'block';
             document.getElementById('threat-viz').style.display = 'none';
             const status = document.getElementById('status-display');
-            status.innerText = "SYSTEM PURGED";
-            setTimeout(() => { status.innerText = "AWAITING OPTICAL INPUT"; status.style.background = "rgba(255, 51, 51, 0.15)"; }, 600);
+            status.innerText = "AWAITING OPTICAL INPUT"; status.style.background = "rgba(255, 51, 51, 0.15)";
         });
 
         document.getElementById('connect-btn').addEventListener('click', () => { 
             document.getElementById('entry-screen').style.display = 'none'; 
             document.getElementById('boot-overlay').style.display = 'flex'; 
             
-            // Critical: iOS requires a user gesture to request sensor permission
             if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-                DeviceOrientationEvent.requestPermission()
-                    .then(response => { if (response == 'granted') initSensors(); })
-                    .catch(console.error);
+                DeviceOrientationEvent.requestPermission().then(initSensors);
             } else {
                 initSensors();
             }
