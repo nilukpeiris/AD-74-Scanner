@@ -37,6 +37,7 @@
         .glitch-active {
             animation: hud-shudder 0.15s infinite;
             border-color: var(--alert-color) !important;
+            box-shadow: 0 0 20px rgba(255, 51, 51, 0.3);
         }
 
         .feed-glitch {
@@ -102,20 +103,15 @@
 
         /* --- THREAT VISUALS --- */
         .loading { display: none; width: 120px; height: 120px; perspective: 1000px; position: relative; z-index: 5; }
-        
         @keyframes rotate { from { transform: rotateY(0deg) rotateX(20deg); } to { transform: rotateY(360deg) rotateX(20deg); } }
 
-        .side { 
-            position: absolute; border: 1px solid var(--primary-color); 
-            background: rgba(0, 240, 255, 0.08); display: flex; align-items: center; justify-content: center; font-size: 10px; 
-        }
-
+        .side { position: absolute; border: 1px solid var(--primary-color); background: rgba(0, 240, 255, 0.08); display: flex; align-items: center; justify-content: center; font-size: 10px; }
         .f-front  { width: 100px; height: 100px; transform: translateZ(5px); }
         .f-back   { width: 100px; height: 100px; transform: translateZ(-5px) rotateY(180deg); }
-        .f-top    { width: 100px; height: 10; transform: rotateX(90deg) translateZ(5px); }
-        .f-bottom { width: 100px; height: 10; transform: rotateX(-90deg) translateZ(95px); }
-        .f-left   { width: 10;  height: 100px; transform: rotateY(-90deg) translateZ(5px); }
-        .f-right  { width: 10;  height: 100px; transform: rotateY(90deg) translateZ(95px); }
+        .f-top    { width: 100px; height: 10px; transform: rotateX(90deg) translateZ(5px); }
+        .f-bottom { width: 100px; height: 10px; transform: rotateX(-90deg) translateZ(95px); }
+        .f-left   { width: 10px;  height: 100px; transform: rotateY(-90deg) translateZ(5px); }
+        .f-right  { width: 10px;  height: 100px; transform: rotateY(90deg) translateZ(95px); }
 
         .cube { display: none; width: 80px; height: 80px; position: absolute; top: 20px; left: 20px; transform-style: preserve-3d; animation: rotate 8s infinite linear; }
         .c-side { position: absolute; width: 80px; height: 80px; border: 1px solid var(--primary-color); background: rgba(0, 240, 255, 0.08); display: flex; align-items: center; justify-content: center; font-size: 10px; }
@@ -124,12 +120,7 @@
         .left { transform: rotateY(-90deg) translateZ(40px); } .right { transform: rotateY(90deg) translateZ(40px); }
 
         .pyramid { display: none; width: 100px; height: 100px; position: absolute; top: 10px; left: 10px; transform-style: preserve-3d; animation: rotate 5s infinite linear; }
-        .p-side {
-            position: absolute; width: 0; height: 0;
-            border-left: 50px solid transparent; border-right: 50px solid transparent;
-            border-bottom: 90px solid rgba(0, 240, 255, 0.2); border-top: none;
-            display: flex; align-items: center; justify-content: center; color: var(--primary-color);
-        }
+        .p-side { position: absolute; width: 0; height: 0; border-left: 50px solid transparent; border-right: 50px solid transparent; border-bottom: 90px solid rgba(0, 240, 255, 0.2); border-top: none; display: flex; align-items: center; justify-content: center; color: var(--primary-color); }
         .p-front { transform: rotateY(0deg) translateZ(25px) rotateX(30deg); transform-origin: 50% 100%; }
         .p-back  { transform: rotateY(180deg) translateZ(25px) rotateX(30deg); transform-origin: 50% 100%; }
         .p-left  { transform: rotateY(-90deg) translateZ(25px) rotateX(30deg); transform-origin: 50% 100%; }
@@ -137,24 +128,11 @@
 
         .hull-intact { display: none; width: 100px; height: 100px; position: absolute; top: 10px; left: 10px; transform-style: preserve-3d; animation: rotate 8s infinite linear; }
         .hull-broken { display: none; width: 100px; height: 100px; position: absolute; top: 10px; left: 10px; transform-style: preserve-3d; animation: rotate 8s infinite linear; }
-        .hull-broken .side {
-            border-color: var(--alert-color); color: var(--alert-color);
-            background: radial-gradient(circle, rgba(255, 51, 51, 0.2) 0%, rgba(255, 51, 51, 0.05) 100%);
-            animation: danger-pulse 1.5s infinite ease-in-out;
-        }
+        .hull-broken .side { border-color: var(--alert-color); color: var(--alert-color); background: radial-gradient(circle, rgba(255, 51, 51, 0.2) 0%, rgba(255, 51, 51, 0.05) 100%); animation: danger-pulse 1.5s infinite ease-in-out; }
 
-        @keyframes danger-pulse {
-            0%, 100% { box-shadow: inset 0 0 10px rgba(255, 51, 51, 0.5); border-color: rgba(255, 51, 51, 1); }
-            50% { box-shadow: inset 0 0 30px rgba(255, 51, 51, 0.8); border-color: rgba(255, 51, 51, 0.4); }
-        }
+        @keyframes danger-pulse { 0%, 100% { box-shadow: inset 0 0 10px rgba(255, 51, 51, 0.5); border-color: rgba(255, 51, 51, 1); } 50% { box-shadow: inset 0 0 30px rgba(255, 51, 51, 0.8); border-color: rgba(255, 51, 51, 0.4); } }
 
-        .core-singularity {
-            position: absolute; top: 50%; left: 50%; width: 8px; height: 8px; 
-            background: #fff; border-radius: 50%; transform: translate(-50%, -50%);
-            box-shadow: 0 0 20px 5px var(--alert-color); animation: core-pulse 1.5s infinite ease-in-out;
-            z-index: 6; display: none;
-        }
-
+        .core-singularity { position: absolute; top: 50%; left: 50%; width: 8px; height: 8px; background: #fff; border-radius: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 20px 5px var(--alert-color); animation: core-pulse 1.5s infinite ease-in-out; z-index: 6; display: none; }
         @keyframes core-pulse { 0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; } 50% { transform: translate(-50%, -50%) scale(2.5); opacity: 1; } }
 
         main { flex: 1; display: flex; flex-direction: column; border-top: 1px solid rgba(0, 240, 255, 0.2); padding-top: 10px; overflow-y: auto; }
@@ -246,92 +224,79 @@
         let isThreatActive = false;
 
         const SCAN_LIBRARY = {
-            "EXPLOSIVES DETECTED": {
-                status: "CRITICAL THREAT DETECTED",
-                color: "var(--alert-color)",
-                info: "<strong>PROTOCOL AD-74:</strong> Class-4 controlled molecular shearing markers. Nano-particulate Accelerant [IS-109]. Barium-Nitrate residue. detected.",
-                shape: "cube",
-                sync: "CONFIDENCE // 89%"
-            },
-            "BIOHAZARD": {
-                status: "PATHOGEN DETECTED",
-                color: "var(--alert-color)",
-                info: "<strong>SENSORS ACTIVE:</strong> Airborne biological agent identified. Seal localized vents.",
-                shape: "pyramid",
-                sync: "SYNC // 82%"
-            },
-            "INTACT HULL SEGMENT": {
-                status: "STRUCTURAL SCAN: NOMINAL",
-                color: "var(--primary-color)",
-                info: "<strong>INTEGRITY:</strong> 100%. No stress fractures or surface damage detected.",
-                shape: "intact",
-                sync: "CONFIDENCE // 100%"
-            },
-            "DAMAGED HULL SEGMENT": {
-                status: "STRUCTURAL SCAN: FAILURE",
-                color: "var(--alert-color)",
-                info: "<strong>WARNING:</strong> Compromised hull integrity. Major stress fractures detected. Venting life support.",
-                shape: "broken",
-                sync: "CONFIDENCE // 78%"
-            },
-            "CLEARANCE": {
-                status: "ACCESS GRANTED // LEVEL 4",
-                color: "var(--primary-color)",
-                info: "<strong>ENCRYPTION KEY:</strong> valid. Personnel file AD-909 decrypted. Welcome, Director.",
-                shape: null,
-                sync: "100% SYNC"
-            },
-            "VOID": {
-                status: "NULL SIGNAL DETECTED",
-                color: "#ffffff",
-                info: "<strong>DATA CORRUPTION:</strong> The scanned matrix contains no readable forensic trail.",
-                shape: "pyramid",
-                sync: "0.0% SYNC"
-            }
+            "BOMB": { status: "CRITICAL THREAT DETECTED", color: "var(--alert-color)", info: "<strong>PROTOCOL AD-74:</strong> Hazardous signature. High-yield compound detected.", shape: "cube", sync: "ERROR // 99%" },
+            "BIOHAZARD": { status: "PATHOGEN DETECTED", color: "#39ff14", info: "<strong>SENSORS ACTIVE:</strong> Airborne biological agent identified.", shape: "pyramid", sync: "SYNC // 82%" },
+            "INTACT": { status: "STRUCTURAL SCAN: OK", color: "var(--primary-color)", info: "<strong>INTEGRITY:</strong> 100%. No stress fractures detected.", shape: "intact", sync: "100% SYNC" },
+            "BROKEN": { status: "STRUCTURAL FAILURE", color: "var(--alert-color)", info: "<strong>WARNING:</strong> Compromised hull integrity.", shape: "broken", sync: "31% SYNC" },
+            "CLEARANCE": { status: "ACCESS GRANTED // LEVEL 4", color: "var(--primary-color)", info: "<strong>ENCRYPTION KEY:</strong> valid. Personnel file AD-909 decrypted.", shape: null, sync: "100% SYNC" },
+            "VOID": { status: "NULL SIGNAL DETECTED", color: "#ffffff", info: "<strong>DATA CORRUPTION:</strong> forensic trail missing.", shape: "pyramid", sync: "0.0% SYNC" }
         };
 
-        // --- MAGNETOMETER LOGIC ---
+        // --- UPDATED MAGNETOMETER FIX ---
         const magBar = document.getElementById('mag-bar');
         const magUT = document.getElementById('mag-uT');
         const magBearing = document.getElementById('mag-bearing');
         const uiContainer = document.getElementById('main-ui');
         const videoFeed = document.getElementById('camera-feed');
 
-        function initMagnetometer() {
-            // Bearing (Compass)
+        function updateMagUI(x, y, z) {
+            // Total Field Strength: Math.sqrt(x^2 + y^2 + z^2)
+            const strength = Math.sqrt(x**2 + y**2 + z**2).toFixed(2);
+            magUT.innerText = strength + " uT";
+            
+            // Standard Earth field is 25-65 uT. We'll glitch at 85+ uT.
+            const percent = Math.min((strength / 120) * 100, 100);
+            magBar.style.width = percent + "%";
+
+            if (strength > 85) {
+                uiContainer.classList.add('glitch-active');
+                videoFeed.classList.add('feed-glitch');
+                magBar.style.background = 'var(--alert-color)';
+                if(Math.random() > 0.95) document.getElementById('status-display').innerText = "EMF_INTERFERENCE_DETECTED";
+            } else {
+                uiContainer.classList.remove('glitch-active');
+                videoFeed.classList.remove('feed-glitch');
+                magBar.style.background = 'var(--primary-color)';
+            }
+        }
+
+        function initSensors() {
+            // 1. Compass Heading
             if (window.DeviceOrientationEvent) {
                 window.addEventListener('deviceorientation', (event) => {
                     let heading = event.webkitCompassHeading || event.alpha;
                     if (heading) magBearing.innerText = Math.floor(heading).toString().padStart(3, '0') + "°";
                 });
+                
+                // FALLBACK: If DeviceOrientation provides absolute magnetic data (Android Chrome)
+                window.addEventListener('deviceorientationabsolute', (event) => {
+                    if (event.alpha !== null) {
+                        // Using alpha/beta/gamma as a proxy for magnetic flux if API is blocked
+                        updateMagUI(event.alpha/4, event.beta/2, event.gamma/2);
+                    }
+                });
             }
 
-            // Field Strength (uT)
+            // 2. Modern Magnetometer API (Requires HTTPS)
             if ('Magnetometer' in window) {
                 try {
                     const mag = new Magnetometer({frequency: 10});
-                    mag.addEventListener('reading', () => {
-                        const strength = Math.sqrt(mag.x**2 + mag.y**2 + mag.z**2).toFixed(2);
-                        magUT.innerText = strength + " uT";
-                        const percent = Math.min((strength / 100) * 100, 100);
-                        magBar.style.width = percent + "%";
-
-                        if (strength > 80) {
-                            uiContainer.classList.add('glitch-active');
-                            videoFeed.classList.add('feed-glitch');
-                            magBar.style.background = 'var(--alert-color)';
-                            if(Math.random() > 0.9) document.getElementById('status-display').innerText = "EMF_INTERFERENCE_CRITICAL";
-                        } else {
-                            uiContainer.classList.remove('glitch-active');
-                            videoFeed.classList.remove('feed-glitch');
-                            magBar.style.background = 'var(--primary-color)';
-                        }
-                    });
+                    mag.addEventListener('reading', () => updateMagUI(mag.x, mag.y, mag.z));
                     mag.start();
-                } catch (e) { magUT.innerText = "SENSOR_ERR"; }
-            } else { magUT.innerText = "NO_HARDWARE"; }
+                } catch (e) { console.warn("Mag API blocked"); }
+            }
+            
+            // 3. Acceleration Fallback (Ensures UI moves even if mag is dead)
+            window.addEventListener('devicemotion', (event) => {
+                if (!('Magnetometer' in window) && event.accelerationIncludingGravity) {
+                    const acc = event.accelerationIncludingGravity;
+                    // Boost the values to simulate uT readings for the UI
+                    updateMagUI(acc.x * 5, acc.y * 5, acc.z * 5);
+                }
+            });
         }
 
+        // --- SCANNER SYSTEM ---
         function updateUI() {
             let data = "";
             for(let i=0; i<18; i++) {
@@ -359,7 +324,7 @@
                 document.getElementById('line-v').style.animation = 'scan-v 1s forwards';
                 document.getElementById('line-h').style.animation = 'scan-h 1s forwards 0.5s';
                 setTimeout(() => { document.getElementById('boot-overlay').style.display = 'none'; document.getElementById('main-ui').style.opacity = '1'; }, 2000);
-            } catch (err) { document.getElementById('loading-text').innerText = "CAMERA_ERROR"; }
+            } catch (err) { document.getElementById('loading-text').innerText = "HARDWARE_ACCESS_DENIED"; }
         }
 
         function applyScanResult(data) {
@@ -396,11 +361,13 @@
             document.getElementById('entry-screen').style.display = 'none'; 
             document.getElementById('boot-overlay').style.display = 'flex'; 
             
-            // Requesting permissions for iOS and starting sensors
-            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-                DeviceOrientationEvent.requestPermission().then(initMagnetometer);
+            // Critical: iOS requires a user gesture to request sensor permission
+            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                DeviceOrientationEvent.requestPermission()
+                    .then(response => { if (response == 'granted') initSensors(); })
+                    .catch(console.error);
             } else {
-                initMagnetometer();
+                initSensors();
             }
             startSystem(); 
         });
