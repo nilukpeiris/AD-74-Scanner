@@ -112,10 +112,10 @@
 
         .f-front  { width: 100px; height: 100px; transform: translateZ(5px); }
         .f-back   { width: 100px; height: 100px; transform: translateZ(-5px) rotateY(180deg); }
-        .f-top    { width: 100px; height: 10; transform: rotateX(90deg) translateZ(5px); }
-        .f-bottom { width: 100px; height: 10; transform: rotateX(-90deg) translateZ(95px); }
-        .f-left   { width: 10;  height: 100px; transform: rotateY(-90deg) translateZ(5px); }
-        .f-right  { width: 10;  height: 100px; transform: rotateY(90deg) translateZ(95px); }
+        .f-top    { width: 100px; height: 10px; transform: rotateX(90deg) translateZ(5px); }
+        .f-bottom { width: 100px; height: 10px; transform: rotateX(-90deg) translateZ(95px); }
+        .f-left   { width: 10px;  height: 100px; transform: rotateY(-90deg) translateZ(5px); }
+        .f-right  { width: 10px;  height: 100px; transform: rotateY(90deg) translateZ(95px); }
 
         .cube { display: none; width: 80px; height: 80px; position: absolute; top: 20px; left: 20px; transform-style: preserve-3d; animation: rotate 8s infinite linear; }
         .c-side { position: absolute; width: 80px; height: 80px; border: 1px solid var(--primary-color); background: rgba(0, 240, 255, 0.08); display: flex; align-items: center; justify-content: center; font-size: 10px; }
@@ -246,59 +246,39 @@
         let isThreatActive = false;
 
         const SCAN_LIBRARY = {
-            "EXPLOSIVES DETECTED": {
-                status: "CRITICAL THREAT DETECTED",
-                color: "var(--alert-color)",
-                info: "<strong>PROTOCOL AD-74:</strong> Class-4 controlled molecular shearing markers. Nano-particulate Accelerant [IS-109]. Barium-Nitrate residue. detected.",
-                shape: "cube",
-                sync: "CONFIDENCE // 89%"
-            },
-            "BIOHAZARD": {
-                status: "PATHOGEN DETECTED",
-                color: "var(--alert-color)",
-                info: "<strong>SENSORS ACTIVE:</strong> Airborne biological agent identified. Seal localized vents.",
-                shape: "pyramid",
-                sync: "SYNC // 82%"
-            },
-            "INTACT HULL SEGMENT": {
-                status: "STRUCTURAL SCAN: NOMINAL",
-                color: "var(--primary-color)",
-                info: "<strong>INTEGRITY:</strong> 100%. No stress fractures or surface damage detected.",
-                shape: "intact",
-                sync: "CONFIDENCE // 100%"
-            },
-            "DAMAGED HULL SEGMENT": {
-                status: "STRUCTURAL SCAN: FAILURE",
-                color: "var(--alert-color)",
-                info: "<strong>WARNING:</strong> Compromised hull integrity. Major stress fractures detected. Venting life support.",
-                shape: "broken",
-                sync: "CONFIDENCE // 78%"
-            },
-            "CLEARANCE": {
-                status: "ACCESS GRANTED // LEVEL 4",
-                color: "var(--primary-color)",
-                info: "<strong>ENCRYPTION KEY:</strong> valid. Personnel file AD-909 decrypted. Welcome, Director.",
-                shape: null,
-                sync: "100% SYNC"
-            },
-            "VOID": {
-                status: "NULL SIGNAL DETECTED",
-                color: "#ffffff",
-                info: "<strong>DATA CORRUPTION:</strong> The scanned matrix contains no readable forensic trail.",
-                shape: "pyramid",
-                sync: "0.0% SYNC"
-            }
+            "EXPLOSIVES DETECTED": { status: "CRITICAL THREAT DETECTED", color: "var(--alert-color)", info: "<strong>PROTOCOL AD-74:</strong> Class-4 controlled molecular shearing markers. Nano-particulate Accelerant [IS-109]. detected.", shape: "cube", sync: "CONFIDENCE // 89%" },
+            "BIOHAZARD": { status: "PATHOGEN DETECTED", color: "var(--alert-color)", info: "<strong>SENSORS ACTIVE:</strong> Airborne biological agent identified. Seal localized vents.", shape: "pyramid", sync: "SYNC // 82%" },
+            "INTACT HULL SEGMENT": { status: "STRUCTURAL SCAN: NOMINAL", color: "var(--primary-color)", info: "<strong>INTEGRITY:</strong> 100%. No stress fractures or surface damage detected.", shape: "intact", sync: "CONFIDENCE // 100%" },
+            "DAMAGED HULL SEGMENT": { status: "STRUCTURAL SCAN: FAILURE", color: "var(--alert-color)", info: "<strong>WARNING:</strong> Compromised hull integrity. Major stress fractures detected.", shape: "broken", sync: "CONFIDENCE // 78%" },
+            "CLEARANCE": { status: "ACCESS GRANTED // LEVEL 4", color: "var(--primary-color)", info: "<strong>ENCRYPTION KEY:</strong> valid. Personnel file AD-909 decrypted.", shape: null, sync: "100% SYNC" },
+            "VOID": { status: "NULL SIGNAL DETECTED", color: "#ffffff", info: "<strong>DATA CORRUPTION:</strong> The scanned matrix contains no readable forensic trail.", shape: "pyramid", sync: "0.0% SYNC" }
         };
 
-        // --- MAGNETOMETER LOGIC ---
         const magBar = document.getElementById('mag-bar');
         const magUT = document.getElementById('mag-uT');
         const magBearing = document.getElementById('mag-bearing');
         const uiContainer = document.getElementById('main-ui');
         const videoFeed = document.getElementById('camera-feed');
 
+        // Helper to update UI consistently
+        function updateMagUI(strength) {
+            magUT.innerText = strength + " uT";
+            const percent = Math.min((strength / 100) * 100, 100);
+            magBar.style.width = percent + "%";
+
+            if (strength > 80) {
+                uiContainer.classList.add('glitch-active');
+                videoFeed.classList.add('feed-glitch');
+                magBar.style.background = 'var(--alert-color)';
+            } else {
+                uiContainer.classList.remove('glitch-active');
+                videoFeed.classList.remove('feed-glitch');
+                magBar.style.background = 'var(--primary-color)';
+            }
+        }
+
         function initMagnetometer() {
-            // Bearing (Compass)
+            // Compass Logic
             if (window.DeviceOrientationEvent) {
                 window.addEventListener('deviceorientation', (event) => {
                     let heading = event.webkitCompassHeading || event.alpha;
@@ -306,30 +286,27 @@
                 });
             }
 
-            // Field Strength (uT)
+            // --- ADDED: RANDOM ATMOSPHERIC FLUCTUATION (25% to 75%) ---
+            setInterval(() => {
+                const currentVal = parseFloat(magUT.innerText);
+                // Only fluctuate if not currently detecting a real high-intensity field
+                if (currentVal < 80 || magUT.innerText === "0.00 uT") {
+                    const randomStrength = (Math.random() * (75 - 25) + 25).toFixed(2);
+                    updateMagUI(randomStrength);
+                }
+            }, 200);
+
+            // Real Magnetometer Data
             if ('Magnetometer' in window) {
                 try {
                     const mag = new Magnetometer({frequency: 10});
                     mag.addEventListener('reading', () => {
                         const strength = Math.sqrt(mag.x**2 + mag.y**2 + mag.z**2).toFixed(2);
-                        magUT.innerText = strength + " uT";
-                        const percent = Math.min((strength / 100) * 100, 100);
-                        magBar.style.width = percent + "%";
-
-                        if (strength > 80) {
-                            uiContainer.classList.add('glitch-active');
-                            videoFeed.classList.add('feed-glitch');
-                            magBar.style.background = 'var(--alert-color)';
-                            if(Math.random() > 0.9) document.getElementById('status-display').innerText = "EMF_INTERFERENCE_CRITICAL";
-                        } else {
-                            uiContainer.classList.remove('glitch-active');
-                            videoFeed.classList.remove('feed-glitch');
-                            magBar.style.background = 'var(--primary-color)';
-                        }
+                        updateMagUI(strength);
                     });
                     mag.start();
-                } catch (e) { magUT.innerText = "SENSOR_ERR"; }
-            } else { magUT.innerText = "NO_HARDWARE"; }
+                } catch (e) { console.warn("Sensor restricted."); }
+            }
         }
 
         function updateUI() {
@@ -359,13 +336,12 @@
                 document.getElementById('line-v').style.animation = 'scan-v 1s forwards';
                 document.getElementById('line-h').style.animation = 'scan-h 1s forwards 0.5s';
                 setTimeout(() => { document.getElementById('boot-overlay').style.display = 'none'; document.getElementById('main-ui').style.opacity = '1'; }, 2000);
-            } catch (err) { document.getElementById('loading-text').innerText = "CAMERA_ERROR"; }
+            } catch (err) { document.getElementById('loading-text').innerText = "HARDWARE_ERROR"; }
         }
 
         function applyScanResult(data) {
             const status = document.getElementById('status-display');
-            status.innerText = data.status;
-            status.style.background = data.color;
+            status.innerText = data.status; status.style.background = data.color;
             document.getElementById('match-pct').innerText = data.sync;
             document.getElementById('match-pct').style.background = data.color;
             document.getElementById('info-p').innerHTML = data.info;
@@ -395,13 +371,9 @@
         document.getElementById('connect-btn').addEventListener('click', () => { 
             document.getElementById('entry-screen').style.display = 'none'; 
             document.getElementById('boot-overlay').style.display = 'flex'; 
-            
-            // Requesting permissions for iOS and starting sensors
             if (typeof DeviceOrientationEvent.requestPermission === 'function') {
                 DeviceOrientationEvent.requestPermission().then(initMagnetometer);
-            } else {
-                initMagnetometer();
-            }
+            } else { initMagnetometer(); }
             startSystem(); 
         });
     </script>
