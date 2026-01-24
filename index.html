@@ -100,12 +100,8 @@
             font-size: 0.65em; background: rgba(0, 240, 255, 0.05);
         }
 
-        /* --- THREAT VISUALS (CENTERED) --- */
-        .loading { 
-            display: none; width: 150px; height: 150px; perspective: 1000px; 
-            position: relative; z-index: 5;
-            display: flex; align-items: center; justify-content: center;
-        }
+        /* --- THREAT VISUALS --- */
+        .loading { display: none; width: 120px; height: 120px; perspective: 1000px; position: relative; z-index: 5; }
         
         @keyframes rotate { from { transform: rotateY(0deg) rotateX(20deg); } to { transform: rotateY(360deg) rotateX(20deg); } }
 
@@ -121,13 +117,13 @@
         .f-left   { width: 10px;  height: 100px; transform: rotateY(-90deg) translateZ(5px); }
         .f-right  { width: 10px;  height: 100px; transform: rotateY(90deg) translateZ(95px); }
 
-        .cube { display: none; width: 80px; height: 80px; position: relative; transform-style: preserve-3d; animation: rotate 8s infinite linear; }
+        .cube { display: none; width: 80px; height: 80px; position: absolute; top: 20px; left: 20px; transform-style: preserve-3d; animation: rotate 8s infinite linear; }
         .c-side { position: absolute; width: 80px; height: 80px; border: 1px solid var(--primary-color); background: rgba(0, 240, 255, 0.08); display: flex; align-items: center; justify-content: center; font-size: 10px; }
         .front { transform: translateZ(40px); } .back { transform: translateZ(-40px) rotateY(180deg); }
         .top { transform: rotateX(90deg) translateZ(40px); } .bottom { transform: rotateX(-90deg) translateZ(40px); }
         .left { transform: rotateY(-90deg) translateZ(40px); } .right { transform: rotateY(90deg) translateZ(40px); }
 
-        .pyramid { display: none; width: 100px; height: 100px; position: relative; transform-style: preserve-3d; animation: rotate 5s infinite linear; }
+        .pyramid { display: none; width: 100px; height: 100px; position: absolute; top: 10px; left: 10px; transform-style: preserve-3d; animation: rotate 5s infinite linear; }
         .p-side {
             position: absolute; width: 0; height: 0;
             border-left: 50px solid transparent; border-right: 50px solid transparent;
@@ -139,7 +135,8 @@
         .p-left  { transform: rotateY(-90deg) translateZ(25px) rotateX(30deg); transform-origin: 50% 100%; }
         .p-right { transform: rotateY(90deg) translateZ(25px) rotateX(30deg); transform-origin: 50% 100%; }
 
-        .hull-intact, .hull-broken { display: none; width: 100px; height: 100px; position: relative; transform-style: preserve-3d; animation: rotate 8s infinite linear; }
+        .hull-intact { display: none; width: 100px; height: 100px; position: absolute; top: 10px; left: 10px; transform-style: preserve-3d; animation: rotate 8s infinite linear; }
+        .hull-broken { display: none; width: 100px; height: 100px; position: absolute; top: 10px; left: 10px; transform-style: preserve-3d; animation: rotate 8s infinite linear; }
         .hull-broken .side {
             border-color: var(--alert-color); color: var(--alert-color);
             background: radial-gradient(circle, rgba(255, 51, 51, 0.2) 0%, rgba(255, 51, 51, 0.05) 100%);
@@ -155,7 +152,7 @@
             position: absolute; top: 50%; left: 50%; width: 8px; height: 8px; 
             background: #fff; border-radius: 50%; transform: translate(-50%, -50%);
             box-shadow: 0 0 20px 5px var(--alert-color); animation: core-pulse 1.5s infinite ease-in-out;
-            z-index: 6; display: none; pointer-events: none;
+            z-index: 6; display: none;
         }
 
         @keyframes core-pulse { 0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; } 50% { transform: translate(-50%, -50%) scale(2.5); opacity: 1; } }
@@ -263,13 +260,25 @@
         const uiContainer = document.getElementById('main-ui');
         const videoFeed = document.getElementById('camera-feed');
 
+        // Helper to update UI consistently
         function updateMagUI(strength) {
             magUT.innerText = strength + " uT";
             const percent = Math.min((strength / 100) * 100, 100);
             magBar.style.width = percent + "%";
+
+            if (strength > 80) {
+                uiContainer.classList.add('glitch-active');
+                videoFeed.classList.add('feed-glitch');
+                magBar.style.background = 'var(--alert-color)';
+            } else {
+                uiContainer.classList.remove('glitch-active');
+                videoFeed.classList.remove('feed-glitch');
+                magBar.style.background = 'var(--primary-color)';
+            }
         }
 
         function initMagnetometer() {
+            // Compass Logic
             if (window.DeviceOrientationEvent) {
                 window.addEventListener('deviceorientation', (event) => {
                     let heading = event.webkitCompassHeading || event.alpha;
@@ -277,14 +286,17 @@
                 });
             }
 
+            // --- ADDED: RANDOM ATMOSPHERIC FLUCTUATION (25% to 75%) ---
             setInterval(() => {
                 const currentVal = parseFloat(magUT.innerText);
+                // Only fluctuate if not currently detecting a real high-intensity field
                 if (currentVal < 80 || magUT.innerText === "0.00 uT") {
                     const randomStrength = (Math.random() * (60 - 40) + 25).toFixed(2);
                     updateMagUI(randomStrength);
                 }
             }, 200);
 
+            // Real Magnetometer Data
             if ('Magnetometer' in window) {
                 try {
                     const mag = new Magnetometer({frequency: 10});
@@ -330,24 +342,18 @@
         function applyScanResult(data) {
             const status = document.getElementById('status-display');
             status.innerText = data.status; 
-            status.style.color = data.color;
-            status.style.borderColor = data.color;
-            status.style.background = "#000";
+	    status.style.color = data.color;       // Now text reflects the threat level
+    	    status.style.borderColor = data.color; // Border reflects threat level
+    	    status.style.background = "#000";      // Keep background locked to black
             
-            document.getElementById('match-pct').innerText = data.sync;
+	    document.getElementById('match-pct').innerText = data.sync;
             document.getElementById('match-pct').style.background = data.color;
             document.getElementById('info-p').innerHTML = data.info;
-
-            // Trigger glitch ONLY for explosives
-            if (data.status === "CRITICAL THREAT DETECTED") {
-                uiContainer.classList.add('glitch-active');
-                videoFeed.classList.add('feed-glitch');
-            }
 
             if (data.shape) {
                 isThreatActive = true;
                 document.getElementById('camera-feed').style.display = 'none';
-                document.getElementById('threat-viz').style.display = 'flex';
+                document.getElementById('threat-viz').style.display = 'block';
                 document.getElementById('core').style.display = (data.shape === 'cube') ? 'block' : 'none';
                 document.getElementById('viz-cube').style.display = (data.shape === 'cube') ? 'block' : 'none';
                 document.getElementById('viz-pyramid').style.display = (data.shape === 'pyramid') ? 'block' : 'none';
@@ -358,22 +364,18 @@
 
         document.getElementById('reset-btn').addEventListener('click', () => {
             isThreatActive = false;
-            uiContainer.classList.remove('glitch-active');
-            videoFeed.classList.remove('feed-glitch');
-            
             document.getElementById('decoded-output').innerText = "DATA EXTRACTION PENDING";
             document.getElementById('camera-feed').style.display = 'block';
             document.getElementById('threat-viz').style.display = 'none';
             
-            const status = document.getElementById('status-display');
+	    const status = document.getElementById('status-display');
             status.innerText = "SYSTEM PURGED";
-            status.style.color = "var(--alert-color)";
-            status.style.borderColor = "var(--alert-color)";
+	    status.style.color = "var(--alert-color)";       // Reset text to default red
+    	    status.style.borderColor = "var(--alert-color)"; // Reset border to default red
             
-            setTimeout(() => { 
-                status.innerText = "AWAITING OPTICAL INPUT"; 
-                status.style.background = "#000"; 
-            }, 600);
+	    setTimeout(() => { 
+		status.innerText = "AWAITING OPTICAL INPUT"; 
+		status.style.background = "#000"; }, 600);
         });
 
         document.getElementById('connect-btn').addEventListener('click', () => { 
