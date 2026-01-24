@@ -372,6 +372,13 @@
             status.innerText = "SYSTEM PURGED";
 	    status.style.color = "var(--alert-color)";       // Reset text to default red
     	    status.style.borderColor = "var(--alert-color)"; // Reset border to default red
+
+	    const matchPct = document.getElementById('match-pct');
+	    matchPct.innerText = "0.0% CONFIDENCE";
+    	    matchPct.style.background = "var(--warning-color)";
+    
+    	    const infoP = document.getElementById('info-p');
+    	    infoP.innerHTML = "Analyzing optical signatures for data extraction...";
             
 	    setTimeout(() => { 
 		status.innerText = "AWAITING OPTICAL INPUT"; 
