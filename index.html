@@ -177,7 +177,7 @@
 
     <div class="scanner-container" id="main-ui">
         <header style="display: flex; justify-content: space-between; font-size: 0.6em;">
-            <div>AD-FORENSICS // PROBE</div>
+            <div>AD-74 // PROBE</div>
             <div>ST_MODE: MULTI_SCAN</div>
         </header>
 
@@ -226,16 +226,16 @@
             </div>
 
             <div id="decoded-output" style="font-weight: bold; border-left: 3px solid var(--alert-color); padding-left: 10px; font-size: 0.9em; word-break: break-all;">
-                NO DATA EXTRACTED
+                DATA EXTRACTION PENDING
             </div>
             <div class="intel-box">
                 <div style="display: flex; justify-content: space-between; font-size: 0.6em; margin-bottom: 5px;">
                     <span>REPORT: AD-74.ZX</span>
                     <span id="match-pct" style="background: var(--warning-color); color: #000; padding: 0 4px; font-weight: bold;">0.0% SYNC</span>
                 </div>
-                <p id="info-p" style="margin: 0; font-size: 0.7em; line-height: 1.4;">Analyzing optical signatures for payload extraction...</p>
+                <p id="info-p" style="margin: 0; font-size: 0.7em; line-height: 1.4;">Analyzing optical signatures for data extraction...</p>
             </div>
-            <button id="reset-btn">PURGE_DECODED_DATA</button>
+            <button id="reset-btn">PURGE ANALYSIS // RESET INPUT</button>
         </main>
     </div>
 
@@ -291,7 +291,7 @@
                 const currentVal = parseFloat(magUT.innerText);
                 // Only fluctuate if not currently detecting a real high-intensity field
                 if (currentVal < 80 || magUT.innerText === "0.00 uT") {
-                    const randomStrength = (Math.random() * (75 - 25) + 25).toFixed(2);
+                    const randomStrength = (Math.random() * (60 - 40) + 25).toFixed(2);
                     updateMagUI(randomStrength);
                 }
             }, 200);
