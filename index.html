@@ -278,35 +278,41 @@
         }
 
         function initMagnetometer() {
-            // Compass Logic
+            // 1. Handle Compass/Bearing (Device Orientation)
             if (window.DeviceOrientationEvent) {
-                window.addEventListener('deviceorientation', (event) => {
-                    let heading = event.webkitCompassHeading || event.alpha;
+                const handleOrientation = (event) => {
+                    // webkitCompassHeading is iOS specific, alpha is standard
+                    let heading = event.webkitCompassHeading || (360 - event.alpha);
                     if (heading) magBearing.innerText = Math.floor(heading).toString().padStart(3, '0') + "°";
-                });
+                };
+                window.addEventListener('deviceorientation', handleOrientation, true);
             }
 
-            // --- ADDED: RANDOM ATMOSPHERIC FLUCTUATION (25% to 75%) ---
+            // 2. Try the high-precision Magnetometer API (Chrome/Android only)
+            if ('Magnetometer' in window) {
+                try {
+                    navigator.permissions.query({ name: 'magnetometer' }).then(result => {
+                        if (result.state === 'granted' || result.state === 'prompt') {
+                            const mag = new Magnetometer({ frequency: 10 });
+                            mag.addEventListener('reading', () => {
+                                const strength = Math.sqrt(mag.x**2 + mag.y**2 + mag.z**2).toFixed(2);
+                                updateMagUI(strength);
+                            });
+                            mag.start();
+                        }
+                    });
+                } catch (e) { console.warn("Sensor restricted."); }
+            }
+
+            // 3. Fallback: Simulation logic if real sensors are inactive
             setInterval(() => {
-                const currentVal = parseFloat(magUT.innerText);
-                // Only fluctuate if not currently detecting a real high-intensity field
-                if (currentVal < 80 || magUT.innerText === "0.00 uT") {
+                const currentVal = parseFloat(magUT.innerText) || 0;
+                // Only simulate if not receiving a strong real signal
+                if (currentVal < 1.0) {
                     const randomStrength = (Math.random() * (75 - 25) + 25).toFixed(2);
                     updateMagUI(randomStrength);
                 }
-            }, 200);
-
-            // Real Magnetometer Data
-            if ('Magnetometer' in window) {
-                try {
-                    const mag = new Magnetometer({frequency: 10});
-                    mag.addEventListener('reading', () => {
-                        const strength = Math.sqrt(mag.x**2 + mag.y**2 + mag.z**2).toFixed(2);
-                        updateMagUI(strength);
-                    });
-                    mag.start();
-                } catch (e) { console.warn("Sensor restricted."); }
-            }
+            }, 500);
         }
 
         function updateUI() {
