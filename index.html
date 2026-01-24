@@ -265,16 +265,6 @@
             magUT.innerText = strength + " uT";
             const percent = Math.min((strength / 100) * 100, 100);
             magBar.style.width = percent + "%";
-
-            if (strength > 80) {
-                uiContainer.classList.add('glitch-active');
-                videoFeed.classList.add('feed-glitch');
-                magBar.style.background = 'var(--alert-color)';
-            } else {
-                uiContainer.classList.remove('glitch-active');
-                videoFeed.classList.remove('feed-glitch');
-                magBar.style.background = 'var(--primary-color)';
-            }
         }
 
         function initMagnetometer() {
@@ -350,6 +340,10 @@
             document.getElementById('match-pct').style.background = data.color;
             document.getElementById('info-p').innerHTML = data.info;
 
+	    if (data.status === "CRITICAL THREAT DETECTED") {
+        	uiContainer.classList.add('glitch-active');
+        	videoFeed.classList.add('feed-glitch');
+
             if (data.shape) {
                 isThreatActive = true;
                 document.getElementById('camera-feed').style.display = 'none';
@@ -364,7 +358,11 @@
 
         document.getElementById('reset-btn').addEventListener('click', () => {
             isThreatActive = false;
-            document.getElementById('decoded-output').innerText = "DATA EXTRACTION PENDING";
+	    uiContainer.classList.remove('glitch-active');
+    	    videoFeed.classList.remove('feed-glitch');
+            
+
+	    document.getElementById('decoded-output').innerText = "DATA EXTRACTION PENDING";
             document.getElementById('camera-feed').style.display = 'block';
             document.getElementById('threat-viz').style.display = 'none';
             
