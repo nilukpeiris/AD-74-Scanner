@@ -159,7 +159,7 @@
 
         main { flex: 1; display: flex; flex-direction: column; border-top: 1px solid rgba(0, 240, 255, 0.2); padding-top: 10px; overflow-y: auto; }
         .intel-box { border: 1px solid var(--warning-color); padding: 10px; color: var(--warning-color); background: rgba(255, 204, 0, 0.05); margin-top: 10px; }
-        .status-bar { background: rgba(255, 51, 51, 0.15); padding: 8px; margin: 10px 0; font-size: 0.8em; text-align: center; border: 1px solid var(--alert-color); color: var(--alert-color); transition: 0.3s; }
+        .status-bar { background: #000; padding: 8px; margin: 10px 0; font-size: 0.8em; text-align: center; border: 1px solid var(--alert-color); color: var(--alert-color); transition: 0.3s; }
         #reset-btn { margin-top: 10px; background: rgba(255, 51, 51, 0.1); color: var(--alert-color); border: 1px solid var(--alert-color); padding: 8px; cursor: pointer; font-family: 'Space Mono'; font-size: 0.7em; }
     </style>
 </head>
@@ -341,8 +341,12 @@
 
         function applyScanResult(data) {
             const status = document.getElementById('status-display');
-            status.innerText = data.status; status.style.background = data.color;
-            document.getElementById('match-pct').innerText = data.sync;
+            status.innerText = data.status; 
+	    status.style.color = data.color;       // Now text reflects the threat level
+    	    status.style.borderColor = data.color; // Border reflects threat level
+    	    status.style.background = "#000";      // Keep background locked to black
+            
+	    document.getElementById('match-pct').innerText = data.sync;
             document.getElementById('match-pct').style.background = data.color;
             document.getElementById('info-p').innerHTML = data.info;
 
@@ -363,9 +367,15 @@
             document.getElementById('decoded-output').innerText = "DATA EXTRACTION PENDING";
             document.getElementById('camera-feed').style.display = 'block';
             document.getElementById('threat-viz').style.display = 'none';
-            const status = document.getElementById('status-display');
+            
+	    const status = document.getElementById('status-display');
             status.innerText = "SYSTEM PURGED";
-            setTimeout(() => { status.innerText = "AWAITING OPTICAL INPUT"; status.style.background = "rgba(255, 51, 51, 0.15)"; }, 600);
+	    status.style.color = "var(--alert-color)";       // Reset text to default red
+    	    status.style.borderColor = "var(--alert-color)"; // Reset border to default red
+            
+	    setTimeout(() => { 
+		status.innerText = "AWAITING OPTICAL INPUT"; 
+		status.style.background = "#000"; }, 600);
         });
 
         document.getElementById('connect-btn').addEventListener('click', () => { 
