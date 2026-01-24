@@ -100,37 +100,63 @@
             font-size: 0.65em; background: rgba(0, 240, 255, 0.05);
         }
 
-        /* --- THREAT VISUALS --- */
+        /* --- NEW SCAN LINE OVERLAY --- */
+        .scan-line {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 2px;
+            background: var(--primary-color);
+            box-shadow: 0 0 15px var(--primary-color);
+            z-index: 20;
+            pointer-events: none;
+            display: none;
+            animation: scan-move 4s linear infinite;
+        }
+
+        @keyframes scan-move {
+            0% { top: 0%; }
+            100% { top: 100%; }
+        }
+
+        /* --- THREAT VISUALS & FIXED ROTATION --- */
         .loading { display: none; width: 120px; height: 120px; perspective: 1000px; position: relative; z-index: 5; }
         
-        @keyframes rotate { 
-    from { 
-        transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); 
-    } 
-    to { 
-        transform: rotateX(360deg) rotateY(360deg) rotateZ(360deg); 
-    } 
-}
+        @keyframes rotate-all { 
+            from { transform: perspective(1000px) rotateX(0deg) rotateY(0deg) rotateZ(0deg); } 
+            to { transform: perspective(1000px) rotateX(360deg) rotateY(360deg) rotateZ(360deg); } 
+        }
 
-        .side { 
+        /* Standardize all rotating containers */
+        .cube, .pyramid, .hull-intact, .hull-broken {
+            transform-style: preserve-3d;
+            animation: rotate-all 8s infinite linear !important;
+            will-change: transform;
+        }
+
+        .side, .c-side { 
             position: absolute; border: 1px solid var(--primary-color); 
             background: rgba(0, 240, 255, 0.08); display: flex; align-items: center; justify-content: center; font-size: 10px; 
         }
 
-        .f-front  { width: 100px; height: 100px; transform: translateZ(5px); }
-        .f-back   { width: 100px; height: 100px; transform: translateZ(-5px) rotateY(180deg); }
-        .f-top    { width: 100px; height: 10px; transform: rotateX(90deg) translateZ(5px); }
-        .f-bottom { width: 100px; height: 10px; transform: rotateX(-90deg) translateZ(95px); }
-        .f-left   { width: 10px;  height: 100px; transform: rotateY(-90deg) translateZ(5px); }
-        .f-right  { width: 10px;  height: 100px; transform: rotateY(90deg) translateZ(95px); }
+        /* Hull Faces (Box Geometry) */
+        .f-front  { width: 100px; height: 100px; transform: translateZ(50px); }
+        .f-back   { width: 100px; height: 100px; transform: translateZ(-50px) rotateY(180deg); }
+        .f-top    { width: 100px; height: 100px; transform: rotateX(90deg) translateZ(50px); }
+        .f-bottom { width: 100px; height: 100px; transform: rotateX(-90deg) translateZ(50px); }
+        .f-left   { width: 100px; height: 100px; transform: rotateY(-90deg) translateZ(50px); }
+        .f-right  { width: 100px; height: 100px; transform: rotateY(90deg) translateZ(50px); }
 
-        .cube { display: none; width: 80px; height: 80px; position: absolute; top: 20px; left: 20px; transform-style: preserve-3d; animation: rotate 8s infinite linear; }
-        .c-side { position: absolute; width: 80px; height: 80px; border: 1px solid var(--primary-color); background: rgba(0, 240, 255, 0.08); display: flex; align-items: center; justify-content: center; font-size: 10px; }
-        .front { transform: translateZ(40px); } .back { transform: translateZ(-40px) rotateY(180deg); }
-        .top { transform: rotateX(90deg) translateZ(40px); } .bottom { transform: rotateX(-90deg) translateZ(40px); }
-        .left { transform: rotateY(-90deg) translateZ(40px); } .right { transform: rotateY(90deg) translateZ(40px); }
+        /* Cube Geometry */
+        .cube { display: none; width: 80px; height: 80px; position: absolute; }
+        .c-side { width: 80px; height: 80px; }
+        .front { transform: translateZ(40px); } 
+        .back { transform: translateZ(-40px) rotateY(180deg); }
+        .top { transform: rotateX(90deg) translateZ(40px); } 
+        .bottom { transform: rotateX(-90deg) translateZ(40px); }
+        .left { transform: rotateY(-90deg) translateZ(40px); } 
+        .right { transform: rotateY(90deg) translateZ(40px); }
 
-        .pyramid { display: none; width: 100px; height: 100px; position: absolute; top: 10px; left: 10px; transform-style: preserve-3d; animation: rotate 8s infinite linear; }
+        /* Pyramid Geometry */
+        .pyramid { display: none; width: 100px; height: 100px; position: absolute; }
         .p-side {
             position: absolute; width: 0; height: 0;
             border-left: 50px solid transparent; border-right: 50px solid transparent;
@@ -138,20 +164,21 @@
             display: flex; align-items: center; justify-content: center; color: var(--primary-color);
         }
         
-/* --- CALIBRATED PYRAMID GEOMETRY --- */
-.p-front  { transform: rotateY(0deg) translateZ(25px) rotateX(60deg); transform-origin: 50% 100%; }
-.p-back   { transform: rotateY(180deg) translateZ(25px) rotateX(60deg); transform-origin: 50% 100%; }
-.p-left   { transform: rotateY(-90deg) translateZ(25px) rotateX(60deg); transform-origin: 50% 100%; }
-.p-right  { transform: rotateY(90deg) translateZ(25px) rotateX(60deg); transform-origin: 50% 100%; }
-.p-bottom {
-    width: 100px !important; height: 100px !important;
-    border: 1px solid var(--primary-color) !important;
-    background: rgba(0, 240, 255, 0.1) !important;
-    transform: rotateX(-90deg) translateZ(25px); /* Positioned at the base of the sides */
-    animation: base-pulse 2s infinite ease-in-out;
-}
-        .hull-intact { display: none; width: 100px; height: 100px; position: absolute; top: 10px; left: 10px; transform-style: preserve-3d; animation: rotate 8s infinite linear; }
-        .hull-broken { display: none; width: 100px; height: 100px; position: absolute; top: 10px; left: 10px; transform-style: preserve-3d; animation: rotate 8s infinite linear; }
+        .p-front  { transform: rotateY(0deg) translateZ(25px) rotateX(60deg); transform-origin: 50% 100%; }
+        .p-back   { transform: rotateY(180deg) translateZ(25px) rotateX(60deg); transform-origin: 50% 100%; }
+        .p-left   { transform: rotateY(-90deg) translateZ(25px) rotateX(60deg); transform-origin: 50% 100%; }
+        .p-right  { transform: rotateY(90deg) translateZ(25px) rotateX(60deg); transform-origin: 50% 100%; }
+        
+        .p-bottom {
+            position: absolute;
+            width: 100px !important; height: 100px !important;
+            border: 1px solid var(--primary-color) !important;
+            background: rgba(0, 240, 255, 0.1) !important;
+            transform: rotateX(-90deg) translateZ(2px); 
+            animation: base-pulse 2s infinite ease-in-out;
+        }
+
+        .hull-intact, .hull-broken { display: none; width: 100px; height: 100px; position: absolute; }
         .hull-broken .side {
             border-color: var(--alert-color); color: var(--alert-color);
             background: radial-gradient(circle, rgba(255, 51, 51, 0.2) 0%, rgba(255, 51, 51, 0.05) 100%);
@@ -161,6 +188,11 @@
         @keyframes danger-pulse {
             0%, 100% { box-shadow: inset 0 0 10px rgba(255, 51, 51, 0.5); border-color: rgba(255, 51, 51, 1); }
             50% { box-shadow: inset 0 0 30px rgba(255, 51, 51, 0.8); border-color: rgba(255, 51, 51, 0.4); }
+        }
+
+        @keyframes base-pulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(0, 240, 255, 0.4); background: rgba(0, 240, 255, 0.1); }
+            50% { box-shadow: 0 0 30px rgba(0, 240, 255, 0.8); background: rgba(0, 240, 255, 0.3); }
         }
 
         .core-singularity {
@@ -176,17 +208,6 @@
         .intel-box { border: 1px solid var(--warning-color); padding: 10px; color: var(--warning-color); background: rgba(255, 204, 0, 0.05); margin-top: 10px; }
         .status-bar { background: #000; padding: 8px; margin: 10px 0; font-size: 0.8em; text-align: center; border: 1px solid var(--alert-color); color: var(--alert-color); transition: 0.3s; }
         #reset-btn { margin-top: 10px; background: rgba(255, 51, 51, 0.1); color: var(--alert-color); border: 1px solid var(--alert-color); padding: 8px; cursor: pointer; font-family: 'Space Mono'; font-size: 0.7em; }
-
-@keyframes base-pulse {
-    0%, 100% { 
-        box-shadow: 0 0 10px rgba(0, 240, 255, 0.4); 
-        background: rgba(0, 240, 255, 0.1); 
-    }
-    50% { 
-        box-shadow: 0 0 30px rgba(0, 240, 255, 0.8); 
-        background: rgba(0, 240, 255, 0.3); 
-    }
-}
     </style>
 </head>
 <body>
@@ -212,6 +233,7 @@
         <section class="component-viz">
             <div class="hex-sidebar"><div id="hex-data-stream"></div></div>
             <video id="camera-feed" autoplay playsinline muted></video>
+            <div class="scan-line" id="scanner"></div>
 
             <div class="loading" id="threat-viz">
                 <div class="core-singularity" id="core"></div>
@@ -222,10 +244,10 @@
                 </div>
                 <div class="pyramid" id="viz-pyramid">
                     <div class="p-side p-front"></div>
-		    <div class="p-side p-back"></div>
+		            <div class="p-side p-back"></div>
                     <div class="p-side p-left"></div>
-		    <div class="p-side p-right"></div>
-		    <div class="p-side p-bottom"></div>
+		            <div class="p-side p-right"></div>
+		            <div class="p-bottom"></div>
                 </div>
                 <div class="hull-intact" id="viz-intact">
                     <div class="side f-front"></div><div class="side f-back"></div>
@@ -289,7 +311,6 @@
         const uiContainer = document.getElementById('main-ui');
         const videoFeed = document.getElementById('camera-feed');
 
-        // Helper to update UI consistently
         function updateMagUI(strength) {
             magUT.innerText = strength + " uT";
             const percent = Math.min((strength / 100) * 100, 100);
@@ -307,7 +328,6 @@
         }
 
         function initMagnetometer() {
-            // Compass Logic
             if (window.DeviceOrientationEvent) {
                 window.addEventListener('deviceorientation', (event) => {
                     let heading = event.webkitCompassHeading || event.alpha;
@@ -315,17 +335,14 @@
                 });
             }
 
-            // --- ADDED: RANDOM ATMOSPHERIC FLUCTUATION (25% to 75%) ---
             setInterval(() => {
                 const currentVal = parseFloat(magUT.innerText);
-                // Only fluctuate if not currently detecting a real high-intensity field
                 if (currentVal < 80 || magUT.innerText === "0.00 uT") {
                     const randomStrength = (Math.random() * (60 - 40) + 25).toFixed(2);
                     updateMagUI(randomStrength);
                 }
             }, 200);
 
-            // Real Magnetometer Data
             if ('Magnetometer' in window) {
                 try {
                     const mag = new Magnetometer({frequency: 10});
@@ -371,17 +388,17 @@
         function applyScanResult(data) {
             const status = document.getElementById('status-display');
             status.innerText = data.status; 
-	    status.style.color = data.color;       // Now text reflects the threat level
-    	    status.style.borderColor = data.color; // Border reflects threat level
-    	    status.style.background = "#000";      // Keep background locked to black
+            status.style.color = data.color;
+            status.style.borderColor = data.color;
             
-	    document.getElementById('match-pct').innerText = data.sync;
+            document.getElementById('match-pct').innerText = data.sync;
             document.getElementById('match-pct').style.background = data.color;
             document.getElementById('info-p').innerHTML = data.info;
 
             if (data.shape) {
                 isThreatActive = true;
                 document.getElementById('camera-feed').style.display = 'none';
+                document.getElementById('scanner').style.display = 'block';
                 document.getElementById('threat-viz').style.display = 'block';
                 document.getElementById('core').style.display = (data.shape === 'cube') ? 'block' : 'none';
                 document.getElementById('viz-cube').style.display = (data.shape === 'cube') ? 'block' : 'none';
@@ -395,16 +412,18 @@
             isThreatActive = false;
             document.getElementById('decoded-output').innerText = "DATA EXTRACTION PENDING";
             document.getElementById('camera-feed').style.display = 'block';
+            document.getElementById('scanner').style.display = 'none';
             document.getElementById('threat-viz').style.display = 'none';
             
-	    const status = document.getElementById('status-display');
+            const status = document.getElementById('status-display');
             status.innerText = "SYSTEM PURGED";
-	    status.style.color = "var(--alert-color)";       // Reset text to default red
-    	    status.style.borderColor = "var(--alert-color)"; // Reset border to default red
+            status.style.color = "var(--alert-color)";
+            status.style.borderColor = "var(--alert-color)";
             
-	    setTimeout(() => { 
-		status.innerText = "AWAITING OPTICAL INPUT"; 
-		status.style.background = "#000"; }, 600);
+            setTimeout(() => { 
+                status.innerText = "AWAITING OPTICAL INPUT"; 
+                status.style.background = "#000"; 
+            }, 600);
         });
 
         document.getElementById('connect-btn').addEventListener('click', () => { 
