@@ -25,7 +25,7 @@
             display: flex; flex-direction: column;
         }
 
-        /* --- GLITCH ANIMATION --- */
+        /* --- GLITCH & FLICKER ANIMATIONS --- */
         @keyframes hud-shudder {
             0% { transform: translate(0,0); filter: hue-rotate(0deg); }
             25% { transform: translate(-2px, 1px); filter: hue-rotate(90deg) contrast(1.5); }
@@ -34,14 +34,20 @@
             100% { transform: translate(0,0); }
         }
 
-        .glitch-active {
-            animation: hud-shudder 0.15s infinite;
-            border-color: var(--alert-color) !important;
+        @keyframes power-flicker {
+            0%   { opacity: 1; filter: brightness(1); }
+            10%  { opacity: 0.4; filter: brightness(1.2); }
+            15%  { opacity: 0.9; }
+            20%  { opacity: 0.2; }
+            25%  { opacity: 1; filter: brightness(1); }
+            80%  { opacity: 1; }
+            85%  { opacity: 0.7; }
+            90%  { opacity: 1; }
         }
 
-        .feed-glitch {
-            filter: sepia(1) hue-rotate(0deg) saturate(8) contrast(2) !important;
-        }
+        .glitch-active { animation: hud-shudder 0.15s infinite; border-color: var(--alert-color) !important; }
+        .feed-glitch { filter: sepia(1) hue-rotate(0deg) saturate(8) contrast(2) !important; }
+        .instability-event { animation: power-flicker 0.4s ease-out; }
 
         /* --- SCREENS --- */
         #entry-screen {
@@ -75,7 +81,6 @@
             background: var(--panel-bg); transition: opacity 0.5s ease; overflow: hidden;
         }
 
-        /* --- VISUALIZATION AREA --- */
         .component-viz {
             flex: 1; border: 1px solid rgba(0, 240, 255, 0.2);
             background: #000; margin: 10px 0; position: relative;
@@ -94,15 +99,12 @@
             opacity: 0.6; text-align: left; line-height: 1.4; z-index: 10;
         }
 
-        /* --- MAGNETOMETER UI --- */
         #mag-panel {
             border: 1px solid var(--primary-color); padding: 8px; margin-bottom: 10px; 
             font-size: 0.65em; background: rgba(0, 240, 255, 0.05);
         }
 
-        /* --- THREAT VISUALS --- */
         .loading { display: none; width: 120px; height: 120px; perspective: 1000px; position: relative; z-index: 5; }
-        
         @keyframes rotate { from { transform: rotateY(0deg) rotateX(20deg); } to { transform: rotateY(360deg) rotateX(20deg); } }
 
         .side { 
@@ -245,6 +247,22 @@
         const phoenixChars = ["\uD802\uDD00", "\uD802\uDD01", "\uD802\uDD02", "\uD802\uDD03", "\uD802\uDD04", "\uD802\uDD05", "\uD802\uDD06", "\uD802\uDD07", "\uD802\uDD08"];
         let isThreatActive = false;
 
+        // --- AUDIO ENGINE ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playSound(freq, type, duration, volume = 0.1) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
         const SCAN_LIBRARY = {
             "EXPLOSIVES DETECTED": { status: "CRITICAL THREAT DETECTED", color: "var(--alert-color)", info: "<strong>PROTOCOL AD-74:</strong> Class-4 controlled molecular shearing markers. Nano-particulate Accelerant [IS-109]. detected.", shape: "cube", sync: "CONFIDENCE // 89%" },
             "BIOHAZARD": { status: "PATHOGEN DETECTED", color: "var(--alert-color)", info: "<strong>SENSORS ACTIVE:</strong> Airborne biological agent identified. Seal localized vents.", shape: "pyramid", sync: "SYNC // 82%" },
@@ -260,11 +278,15 @@
         const uiContainer = document.getElementById('main-ui');
         const videoFeed = document.getElementById('camera-feed');
 
-        // Helper to update UI consistently
         function updateMagUI(strength) {
             magUT.innerText = strength + " uT";
             const percent = Math.min((strength / 100) * 100, 100);
             magBar.style.width = percent + "%";
+
+            // Geiger-style audio feedback for magnetism
+            if (strength > 40 && Math.random() > 0.8) {
+                playSound(100 + (strength * 2), 'sine', 0.05, 0.02);
+            }
 
             if (strength > 80) {
                 uiContainer.classList.add('glitch-active');
@@ -277,8 +299,26 @@
             }
         }
 
+        // --- RANDOM POWER INSTABILITY ---
+        function triggerRandomFlicker() {
+            const ui = document.getElementById('main-ui');
+            const status = document.getElementById('status-display');
+            const prevStatus = status.innerText;
+
+            ui.classList.add('instability-event');
+            status.innerText = "WARNING: POWER INSTABILITY";
+            playSound(60, 'sawtooth', 0.4, 0.05); // Low brown-note buzz
+
+            setTimeout(() => {
+                ui.classList.remove('instability-event');
+                if (!isThreatActive) status.innerText = prevStatus;
+            }, 450);
+
+            const nextDelay = Math.floor(Math.random() * (120000 - 30000 + 1)) + 30000;
+            setTimeout(triggerRandomFlicker, nextDelay);
+        }
+
         function initMagnetometer() {
-            // Compass Logic
             if (window.DeviceOrientationEvent) {
                 window.addEventListener('deviceorientation', (event) => {
                     let heading = event.webkitCompassHeading || event.alpha;
@@ -286,17 +326,14 @@
                 });
             }
 
-            // --- ADDED: RANDOM ATMOSPHERIC FLUCTUATION (25% to 75%) ---
             setInterval(() => {
                 const currentVal = parseFloat(magUT.innerText);
-                // Only fluctuate if not currently detecting a real high-intensity field
                 if (currentVal < 80 || magUT.innerText === "0.00 uT") {
                     const randomStrength = (Math.random() * (60 - 40) + 25).toFixed(2);
                     updateMagUI(randomStrength);
                 }
             }, 200);
 
-            // Real Magnetometer Data
             if ('Magnetometer' in window) {
                 try {
                     const mag = new Magnetometer({frequency: 10});
@@ -340,13 +377,14 @@
         }
 
         function applyScanResult(data) {
+            playSound(880, 'sine', 0.1, 0.1); // Detection chirp
             const status = document.getElementById('status-display');
             status.innerText = data.status; 
-	    status.style.color = data.color;       // Now text reflects the threat level
-    	    status.style.borderColor = data.color; // Border reflects threat level
-    	    status.style.background = "#000";      // Keep background locked to black
+            status.style.color = data.color;       
+            status.style.borderColor = data.color; 
+            status.style.background = "#000";      
             
-	    document.getElementById('match-pct').innerText = data.sync;
+            document.getElementById('match-pct').innerText = data.sync;
             document.getElementById('match-pct').style.background = data.color;
             document.getElementById('info-p').innerHTML = data.info;
 
@@ -363,31 +401,31 @@
         }
 
         document.getElementById('reset-btn').addEventListener('click', () => {
+            playSound(150, 'triangle', 0.5, 0.2); // Purge "whoosh" sound
             isThreatActive = false;
             document.getElementById('decoded-output').innerText = "DATA EXTRACTION PENDING";
             document.getElementById('camera-feed').style.display = 'block';
             document.getElementById('threat-viz').style.display = 'none';
             
-	    const status = document.getElementById('status-display');
+            const status = document.getElementById('status-display');
             status.innerText = "SYSTEM PURGED";
-	    status.style.color = "var(--alert-color)";       // Reset text to default red
-    	    status.style.borderColor = "var(--alert-color)"; // Reset border to default red
+            status.style.color = "var(--alert-color)";       
+            status.style.borderColor = "var(--alert-color)"; 
 
-	    const matchPct = document.getElementById('match-pct');
-	    matchPct.innerText = "0.0% CONFIDENCE";
-    	    matchPct.style.background = "var(--warning-color)";
-    
-    	    const infoP = document.getElementById('info-p');
-    	    infoP.innerHTML = "Analyzing optical signatures for data extraction...";
+            document.getElementById('match-pct').innerText = "0.0% CONFIDENCE";
+            document.getElementById('match-pct').style.background = "var(--warning-color)";
+            document.getElementById('info-p').innerHTML = "Analyzing optical signatures for data extraction...";
             
-	    setTimeout(() => { 
-		status.innerText = "AWAITING OPTICAL INPUT"; 
-		status.style.background = "#000"; }, 600);
+            setTimeout(() => { 
+                status.innerText = "AWAITING OPTICAL INPUT"; 
+                status.style.background = "#000"; }, 600);
         });
 
         document.getElementById('connect-btn').addEventListener('click', () => { 
+            audioCtx.resume(); // Required to unlock audio in browsers
             document.getElementById('entry-screen').style.display = 'none'; 
             document.getElementById('boot-overlay').style.display = 'flex'; 
+            triggerRandomFlicker();
             if (typeof DeviceOrientationEvent.requestPermission === 'function') {
                 DeviceOrientationEvent.requestPermission().then(initMagnetometer);
             } else { initMagnetometer(); }
