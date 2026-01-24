@@ -103,7 +103,7 @@
         /* --- THREAT VISUALS --- */
         .loading { display: none; width: 120px; height: 120px; perspective: 1000px; position: relative; z-index: 5; }
         
-        @keyframes rotate { from { transform: rotateY(0deg) rotateX(20deg); } to { transform: rotateY(360deg) rotateX(20deg); } }
+        @keyframes rotate { from { transform: rotatex(0deg) rotateY(0deg) rotateZ(0deg); } to { transform: rotates (360dec) rotateY(360deg) rotateZ(360deg); } }
 
         .side { 
             position: absolute; border: 1px solid var(--primary-color); 
@@ -130,11 +130,19 @@
             border-bottom: 90px solid rgba(0, 240, 255, 0.2); border-top: none;
             display: flex; align-items: center; justify-content: center; color: var(--primary-color);
         }
-        .p-front { transform: rotateY(0deg) translateZ(25px) rotateX(30deg); transform-origin: 50% 100%; }
-        .p-back  { transform: rotateY(180deg) translateZ(25px) rotateX(30deg); transform-origin: 50% 100%; }
-        .p-left  { transform: rotateY(-90deg) translateZ(25px) rotateX(30deg); transform-origin: 50% 100%; }
-        .p-right { transform: rotateY(90deg) translateZ(25px) rotateX(30deg); transform-origin: 50% 100%; }
-
+        
+/* --- CALIBRATED PYRAMID GEOMETRY --- */
+.p-front  { transform: rotateY(0deg) translateZ(25px) rotateX(60deg); transform-origin: 50% 100%; }
+.p-back   { transform: rotateY(180deg) translateZ(25px) rotateX(60deg); transform-origin: 50% 100%; }
+.p-left   { transform: rotateY(-90deg) translateZ(25px) rotateX(60deg); transform-origin: 50% 100%; }
+.p-right  { transform: rotateY(90deg) translateZ(25px) rotateX(60deg); transform-origin: 50% 100%; }
+.p-bottom {
+    width: 100px !important; height: 100px !important;
+    border: 1px solid var(--primary-color) !important;
+    background: rgba(0, 240, 255, 0.1) !important;
+    transform: rotateX(-90deg) translateZ(25px); /* Positioned at the base of the sides */
+    animation: base-pulse 2s infinite ease-in-out;
+}
         .hull-intact { display: none; width: 100px; height: 100px; position: absolute; top: 10px; left: 10px; transform-style: preserve-3d; animation: rotate 8s infinite linear; }
         .hull-broken { display: none; width: 100px; height: 100px; position: absolute; top: 10px; left: 10px; transform-style: preserve-3d; animation: rotate 8s infinite linear; }
         .hull-broken .side {
@@ -161,6 +169,17 @@
         .intel-box { border: 1px solid var(--warning-color); padding: 10px; color: var(--warning-color); background: rgba(255, 204, 0, 0.05); margin-top: 10px; }
         .status-bar { background: #000; padding: 8px; margin: 10px 0; font-size: 0.8em; text-align: center; border: 1px solid var(--alert-color); color: var(--alert-color); transition: 0.3s; }
         #reset-btn { margin-top: 10px; background: rgba(255, 51, 51, 0.1); color: var(--alert-color); border: 1px solid var(--alert-color); padding: 8px; cursor: pointer; font-family: 'Space Mono'; font-size: 0.7em; }
+
+@keyframes base-pulse {
+    0%, 100% { 
+        box-shadow: 0 0 10px rgba(0, 240, 255, 0.4); 
+        background: rgba(0, 240, 255, 0.1); 
+    }
+    50% { 
+        box-shadow: 0 0 30px rgba(0, 240, 255, 0.8); 
+        background: rgba(0, 240, 255, 0.3); 
+    }
+}
     </style>
 </head>
 <body>
@@ -195,8 +214,11 @@
                     <div class="c-side left"></div><div class="c-side right"></div>
                 </div>
                 <div class="pyramid" id="viz-pyramid">
-                    <div class="p-side p-front"></div><div class="p-side p-back"></div>
-                    <div class="p-side p-left"></div><div class="p-side p-right"></div>
+                    <div class="p-side p-front"></div>
+		    <div class="p-side p-back"></div>
+                    <div class="p-side p-left"></div>
+		    <div class="p-side p-right"></div>
+		    <div class="p-side p-bottom"></div>
                 </div>
                 <div class="hull-intact" id="viz-intact">
                     <div class="side f-front"></div><div class="side f-back"></div>
