@@ -1,316 +1,313 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AD-74 // DEEP SCAN OUTPUT</title>
-    <script src="https://unpkg.com/@zxing/library@latest"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>AD-74 // DEEP SCAN OUTPUT</title>
+<script src="https://unpkg.com/@zxing/library@latest"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
 
-        :root {
-            --primary-color: #00f0ff;
-            --bg-color: #050a10;
-            --alert-color: #ff3333;
-            --warning-color: #ffcc00;
-            --panel-bg: rgba(10, 20, 30, 0.9);
-        }
+:root {
+--primary-color: #00f0ff;
+--bg-color: #050a10;
+--alert-color: #ff3333;
+--warning-color: #ffcc00;
+--panel-bg: rgba(10, 20, 30, 0.9);
+}
 
-        body {
-            background-color: var(--bg-color);
-            color: var(--primary-color);
-            font-family: 'Space Mono', monospace;
-            margin: 0; padding: 20px 10px; height: 100vh; height: 100svh;
-            overflow: hidden; text-transform: uppercase; box-sizing: border-box;
-            display: flex; flex-direction: column;
-        }
+body {
+background-color: var(--bg-color);
+color: var(--primary-color);
+font-family: 'Space Mono', monospace;
+margin: 0; padding: 20px 10px; height: 100vh; height: 100svh;
+overflow: hidden; text-transform: uppercase; box-sizing: border-box;
+display: flex; flex-direction: column;
+}
 
-        /* --- GLITCH ANIMATION --- */
-        @keyframes hud-shudder {
-            0% { transform: translate(0,0); filter: hue-rotate(0deg); }
-            25% { transform: translate(-2px, 1px); filter: hue-rotate(90deg) contrast(1.5); }
-            50% { transform: translate(2px, -1px); opacity: 0.8; }
-            75% { transform: translate(-1px, -1px); filter: invert(0.1); }
-            100% { transform: translate(0,0); }
-        }
+/* --- GLITCH ANIMATION --- */
+@keyframes hud-shudder {
+0% { transform: translate(0,0); filter: hue-rotate(0deg); }
+25% { transform: translate(-2px, 1px); filter: hue-rotate(90deg) contrast(1.5); }
+50% { transform: translate(2px, -1px); opacity: 0.8; }
+75% { transform: translate(-1px, -1px); filter: invert(0.1); }
+100% { transform: translate(0,0); }
+}
 
-        .glitch-active {
-            animation: hud-shudder 0.15s infinite;
-            border-color: var(--alert-color) !important;
-        }
+.glitch-active {
+animation: hud-shudder 0.15s infinite;
+border-color: var(--alert-color) !important;
+}
 
-        .feed-glitch {
-            filter: sepia(1) hue-rotate(0deg) saturate(8) contrast(2) !important;
-        }
+.feed-glitch {
+filter: sepia(1) hue-rotate(0deg) saturate(8) contrast(2) !important;
+}
 
-        /* --- SCREENS --- */
-        #entry-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg-color); z-index: 300;
-            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
-        }
+/* --- SCREENS --- */
+#entry-screen {
+position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+background: var(--bg-color); z-index: 300;
+display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
+}
 
-        #connect-btn {
-            background: transparent; color: var(--primary-color); border: 1px solid var(--primary-color);
-            padding: 15px 30px; cursor: pointer; letter-spacing: 2px;
-            box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
-        }
+#connect-btn {
+background: transparent; color: var(--primary-color); border: 1px solid var(--primary-color);
+padding: 15px 30px; cursor: pointer; letter-spacing: 2px;
+box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+}
 
-        .loading-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg-color); z-index: 200;
-            display: none; align-items: center; justify-content: center;
-        }
+.loading-screen {
+position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+background: var(--bg-color); z-index: 200;
+display: none; align-items: center; justify-content: center;
+}
 
-        .boot-line-v, .boot-line-h { position: absolute; background: var(--primary-color); }
-        .boot-line-v { width: 2px; height: 100%; left: 0; }
-        .boot-line-h { width: 100%; height: 2px; top: 0; }
+.boot-line-v, .boot-line-h { position: absolute; background: var(--primary-color); }
+.boot-line-v { width: 2px; height: 100%; left: 0; }
+.boot-line-h { width: 100%; height: 2px; top: 0; }
 
-        @keyframes scan-v { 0% { left: 0; } 100% { left: 100%; } }
-        @keyframes scan-h { 0% { top: 0; } 100% { top: 100%; } }
+@keyframes scan-v { 0% { left: 0; } 100% { left: 100%; } }
+@keyframes scan-h { 0% { top: 0; } 100% { top: 100%; } }
 
-        .scanner-container {
-            flex: 1; opacity: 0; border: 2px solid var(--primary-color);
-            display: flex; flex-direction: column; padding: 15px;
-            background: var(--panel-bg); transition: opacity 0.5s ease; overflow: hidden;
-        }
+.scanner-container {
+flex: 1; opacity: 0; border: 2px solid var(--primary-color);
+display: flex; flex-direction: column; padding: 15px;
+background: var(--panel-bg); transition: opacity 0.5s ease; overflow: hidden;
+}
 
-        /* --- VISUALIZATION AREA --- */
-        .component-viz {
-            flex: 1; border: 1px solid rgba(0, 240, 255, 0.2);
-            background: #000; margin: 10px 0; position: relative;
-            overflow: hidden; display: flex; justify-content: center; align-items: center;
-        }
+/* --- VISUALIZATION AREA --- */
+.component-viz {
+flex: 1; border: 1px solid rgba(0, 240, 255, 0.2);
+background: #000; margin: 10px 0; position: relative;
+overflow: hidden; display: flex; justify-content: center; align-items: center;
+}
 
-        #camera-feed {
-            width: 100%; height: 100%; object-fit: cover;
-            filter: grayscale(1) contrast(1.4) brightness(0.8) sepia(1) hue-rotate(140deg); opacity: 0.6;
-            transition: filter 0.2s;
-        }
+#camera-feed {
+width: 100%; height: 100%; object-fit: cover;
+filter: grayscale(1) contrast(1.4) brightness(0.8) sepia(1) hue-rotate(140deg); opacity: 0.6;
+transition: filter 0.2s;
+}
 
-        .hex-sidebar {
-            position: absolute; left: 10px; top: 20px; bottom: 20px; width: 60px;
-            font-size: 0.55em; overflow: hidden; border-right: 1px solid rgba(0, 240, 255, 0.2);
-            opacity: 0.6; text-align: left; line-height: 1.4; z-index: 10;
-        }
+.hex-sidebar {
+position: absolute; left: 10px; top: 20px; bottom: 20px; width: 60px;
+font-size: 0.55em; overflow: hidden; border-right: 1px solid rgba(0, 240, 255, 0.2);
+opacity: 0.6; text-align: left; line-height: 1.4; z-index: 10;
+}
 
-        /* --- MAGNETOMETER UI --- */
-        #mag-panel {
-            border: 1px solid var(--primary-color); padding: 8px; margin-bottom: 10px; 
-            font-size: 0.65em; background: rgba(0, 240, 255, 0.05);
-        }
+/* --- MAGNETOMETER UI --- */
+#mag-panel {
+border: 1px solid var(--primary-color); padding: 8px; margin-bottom: 10px; 
+font-size: 0.65em; background: rgba(0, 240, 255, 0.05);
+}
 
-        /* --- NEW SCAN LINE OVERLAY --- */
-        .scan-line {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 2px;
-            background: var(--primary-color);
-            box-shadow: 0 0 15px var(--primary-color);
-            z-index: 20;
-            pointer-events: none;
-            display: none;
-            animation: scan-move 4s linear infinite;
-        }
+/* --- THREAT VISUALS --- */
+.loading { display: none; width: 120px; height: 120px; perspective: 1000px; position: relative; z-index: 5; }
 
-        @keyframes scan-move {
-            0% { top: 0%; }
-            100% { top: 100%; }
-        }
+@keyframes rotate { from { transform: rotateY(0deg) rotateX(20deg); } to { transform: rotateY(360deg) rotateX(20deg); } }
 
-        /* --- THREAT VISUALS & FIXED ROTATION --- */
-        .loading { display: none; width: 120px; height: 120px; perspective: 1000px; position: relative; z-index: 5; }
-        
-        @keyframes rotate-all { 
-            from { transform: perspective(1000px) rotateX(0deg) rotateY(0deg) rotateZ(0deg); } 
-            to { transform: perspective(1000px) rotateX(360deg) rotateY(360deg) rotateZ(360deg); } 
-        }
+.side { 
+position: absolute; border: 1px solid var(--primary-color); 
+background: rgba(0, 240, 255, 0.08); display: flex; align-items: center; justify-content: center; font-size: 10px; 
+}
 
-        /* Standardize all rotating containers */
-        .cube, .pyramid, .hull-intact, .hull-broken {
-            transform-style: preserve-3d;
-            animation: rotate-all 8s infinite linear !important;
-            will-change: transform;
-        }
+.f-front  { width: 100px; height: 100px; transform: translateZ(5px); }
+.f-back   { width: 100px; height: 100px; transform: translateZ(-5px) rotateY(180deg); }
+        .f-top    { width: 100px; height: 10; transform: rotateX(90deg) translateZ(5px); }
+        .f-bottom { width: 100px; height: 10; transform: rotateX(-90deg) translateZ(95px); }
+        .f-left   { width: 10;  height: 100px; transform: rotateY(-90deg) translateZ(5px); }
+        .f-right  { width: 10;  height: 100px; transform: rotateY(90deg) translateZ(95px); }
+        .f-top    { width: 100px; height: 10px; transform: rotateX(90deg) translateZ(5px); }
+        .f-bottom { width: 100px; height: 10px; transform: rotateX(-90deg) translateZ(95px); }
+        .f-left   { width: 10px;  height: 100px; transform: rotateY(-90deg) translateZ(5px); }
+        .f-right  { width: 10px;  height: 100px; transform: rotateY(90deg) translateZ(95px); }
 
-        .side, .c-side { 
-            position: absolute; border: 1px solid var(--primary-color); 
-            background: rgba(0, 240, 255, 0.08); display: flex; align-items: center; justify-content: center; font-size: 10px; 
-        }
+.cube { display: none; width: 80px; height: 80px; position: absolute; top: 20px; left: 20px; transform-style: preserve-3d; animation: rotate 8s infinite linear; }
+.c-side { position: absolute; width: 80px; height: 80px; border: 1px solid var(--primary-color); background: rgba(0, 240, 255, 0.08); display: flex; align-items: center; justify-content: center; font-size: 10px; }
+.front { transform: translateZ(40px); } .back { transform: translateZ(-40px) rotateY(180deg); }
+.top { transform: rotateX(90deg) translateZ(40px); } .bottom { transform: rotateX(-90deg) translateZ(40px); }
+.left { transform: rotateY(-90deg) translateZ(40px); } .right { transform: rotateY(90deg) translateZ(40px); }
 
-        /* Hull Faces (Box Geometry) */
-        .f-front  { width: 100px; height: 100px; transform: translateZ(50px); }
-        .f-back   { width: 100px; height: 100px; transform: translateZ(-50px) rotateY(180deg); }
-        .f-top    { width: 100px; height: 100px; transform: rotateX(90deg) translateZ(50px); }
-        .f-bottom { width: 100px; height: 100px; transform: rotateX(-90deg) translateZ(50px); }
-        .f-left   { width: 100px; height: 100px; transform: rotateY(-90deg) translateZ(50px); }
-        .f-right  { width: 100px; height: 100px; transform: rotateY(90deg) translateZ(50px); }
+.pyramid { display: none; width: 100px; height: 100px; position: absolute; top: 10px; left: 10px; transform-style: preserve-3d; animation: rotate 5s infinite linear; }
+.p-side {
+position: absolute; width: 0; height: 0;
+border-left: 50px solid transparent; border-right: 50px solid transparent;
+border-bottom: 90px solid rgba(0, 240, 255, 0.2); border-top: none;
+display: flex; align-items: center; justify-content: center; color: var(--primary-color);
+}
+.p-front { transform: rotateY(0deg) translateZ(25px) rotateX(30deg); transform-origin: 50% 100%; }
+.p-back  { transform: rotateY(180deg) translateZ(25px) rotateX(30deg); transform-origin: 50% 100%; }
+.p-left  { transform: rotateY(-90deg) translateZ(25px) rotateX(30deg); transform-origin: 50% 100%; }
+.p-right { transform: rotateY(90deg) translateZ(25px) rotateX(30deg); transform-origin: 50% 100%; }
 
-        /* Cube Geometry */
-        .cube { display: none; width: 80px; height: 80px; position: absolute; }
-        .c-side { width: 80px; height: 80px; }
-        .front { transform: translateZ(40px); } 
-        .back { transform: translateZ(-40px) rotateY(180deg); }
-        .top { transform: rotateX(90deg) translateZ(40px); } 
-        .bottom { transform: rotateX(-90deg) translateZ(40px); }
-        .left { transform: rotateY(-90deg) translateZ(40px); } 
-        .right { transform: rotateY(90deg) translateZ(40px); }
+.hull-intact { display: none; width: 100px; height: 100px; position: absolute; top: 10px; left: 10px; transform-style: preserve-3d; animation: rotate 8s infinite linear; }
+.hull-broken { display: none; width: 100px; height: 100px; position: absolute; top: 10px; left: 10px; transform-style: preserve-3d; animation: rotate 8s infinite linear; }
+.hull-broken .side {
+border-color: var(--alert-color); color: var(--alert-color);
+background: radial-gradient(circle, rgba(255, 51, 51, 0.2) 0%, rgba(255, 51, 51, 0.05) 100%);
+animation: danger-pulse 1.5s infinite ease-in-out;
+}
 
-        /* Pyramid Geometry */
-        .pyramid { display: none; width: 100px; height: 100px; position: absolute; }
-        .p-side {
-            position: absolute; width: 0; height: 0;
-            border-left: 50px solid transparent; border-right: 50px solid transparent;
-            border-bottom: 90px solid rgba(0, 240, 255, 0.2); border-top: none;
-            display: flex; align-items: center; justify-content: center; color: var(--primary-color);
-        }
-        
-        .p-front  { transform: rotateY(0deg) translateZ(25px) rotateX(60deg); transform-origin: 50% 100%; }
-        .p-back   { transform: rotateY(180deg) translateZ(25px) rotateX(60deg); transform-origin: 50% 100%; }
-        .p-left   { transform: rotateY(-90deg) translateZ(25px) rotateX(60deg); transform-origin: 50% 100%; }
-        .p-right  { transform: rotateY(90deg) translateZ(25px) rotateX(60deg); transform-origin: 50% 100%; }
-        
-        .p-bottom {
-            position: absolute;
-            width: 100px !important; height: 100px !important;
-            border: 1px solid var(--primary-color) !important;
-            background: rgba(0, 240, 255, 0.1) !important;
-            transform: rotateX(-90deg) translateZ(2px); 
-            animation: base-pulse 2s infinite ease-in-out;
-        }
+@keyframes danger-pulse {
+0%, 100% { box-shadow: inset 0 0 10px rgba(255, 51, 51, 0.5); border-color: rgba(255, 51, 51, 1); }
+50% { box-shadow: inset 0 0 30px rgba(255, 51, 51, 0.8); border-color: rgba(255, 51, 51, 0.4); }
+}
 
-        .hull-intact, .hull-broken { display: none; width: 100px; height: 100px; position: absolute; }
-        .hull-broken .side {
-            border-color: var(--alert-color); color: var(--alert-color);
-            background: radial-gradient(circle, rgba(255, 51, 51, 0.2) 0%, rgba(255, 51, 51, 0.05) 100%);
-            animation: danger-pulse 1.5s infinite ease-in-out;
-        }
+.core-singularity {
+position: absolute; top: 50%; left: 50%; width: 8px; height: 8px; 
+background: #fff; border-radius: 50%; transform: translate(-50%, -50%);
+box-shadow: 0 0 20px 5px var(--alert-color); animation: core-pulse 1.5s infinite ease-in-out;
+z-index: 6; display: none;
+}
 
-        @keyframes danger-pulse {
-            0%, 100% { box-shadow: inset 0 0 10px rgba(255, 51, 51, 0.5); border-color: rgba(255, 51, 51, 1); }
-            50% { box-shadow: inset 0 0 30px rgba(255, 51, 51, 0.8); border-color: rgba(255, 51, 51, 0.4); }
-        }
+@keyframes core-pulse { 0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; } 50% { transform: translate(-50%, -50%) scale(2.5); opacity: 1; } }
 
-        @keyframes base-pulse {
-            0%, 100% { box-shadow: 0 0 10px rgba(0, 240, 255, 0.4); background: rgba(0, 240, 255, 0.1); }
-            50% { box-shadow: 0 0 30px rgba(0, 240, 255, 0.8); background: rgba(0, 240, 255, 0.3); }
-        }
-
-        .core-singularity {
-            position: absolute; top: 50%; left: 50%; width: 8px; height: 8px; 
-            background: #fff; border-radius: 50%; transform: translate(-50%, -50%);
-            box-shadow: 0 0 20px 5px var(--alert-color); animation: core-pulse 1.5s infinite ease-in-out;
-            z-index: 6; display: none;
-        }
-
-        @keyframes core-pulse { 0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; } 50% { transform: translate(-50%, -50%) scale(2.5); opacity: 1; } }
-
-        main { flex: 1; display: flex; flex-direction: column; border-top: 1px solid rgba(0, 240, 255, 0.2); padding-top: 10px; overflow-y: auto; }
-        .intel-box { border: 1px solid var(--warning-color); padding: 10px; color: var(--warning-color); background: rgba(255, 204, 0, 0.05); margin-top: 10px; }
-        .status-bar { background: #000; padding: 8px; margin: 10px 0; font-size: 0.8em; text-align: center; border: 1px solid var(--alert-color); color: var(--alert-color); transition: 0.3s; }
-        #reset-btn { margin-top: 10px; background: rgba(255, 51, 51, 0.1); color: var(--alert-color); border: 1px solid var(--alert-color); padding: 8px; cursor: pointer; font-family: 'Space Mono'; font-size: 0.7em; }
-    </style>
+main { flex: 1; display: flex; flex-direction: column; border-top: 1px solid rgba(0, 240, 255, 0.2); padding-top: 10px; overflow-y: auto; }
+.intel-box { border: 1px solid var(--warning-color); padding: 10px; color: var(--warning-color); background: rgba(255, 204, 0, 0.05); margin-top: 10px; }
+.status-bar { background: rgba(255, 51, 51, 0.15); padding: 8px; margin: 10px 0; font-size: 0.8em; text-align: center; border: 1px solid var(--alert-color); color: var(--alert-color); transition: 0.3s; }
+#reset-btn { margin-top: 10px; background: rgba(255, 51, 51, 0.1); color: var(--alert-color); border: 1px solid var(--alert-color); padding: 8px; cursor: pointer; font-family: 'Space Mono'; font-size: 0.7em; }
+</style>
 </head>
 <body>
 
-    <div id="entry-screen">
-        <button id="connect-btn">Connect to Probe AD-74</button>
-    </div>
+<div id="entry-screen">
+<button id="connect-btn">Connect to Probe AD-74</button>
+</div>
 
-    <div class="loading-screen" id="boot-overlay">
-        <div class="boot-line-v" id="line-v"></div>
-        <div class="boot-line-h" id="line-h"></div>
-        <div id="loading-text" style="font-size: 0.8em; letter-spacing: 5px;">SYNCING SENSORS...</div>
-    </div>
+<div class="loading-screen" id="boot-overlay">
+<div class="boot-line-v" id="line-v"></div>
+<div class="boot-line-h" id="line-h"></div>
+<div id="loading-text" style="font-size: 0.8em; letter-spacing: 5px;">SYNCING SENSORS...</div>
+</div>
 
-    <div class="scanner-container" id="main-ui">
-        <header style="display: flex; justify-content: space-between; font-size: 0.6em;">
-            <div>AD-74 // PROBE</div>
-            <div>ST_MODE: MULTI_SCAN</div>
-        </header>
+<div class="scanner-container" id="main-ui">
+<header style="display: flex; justify-content: space-between; font-size: 0.6em;">
+<div>AD-FORENSICS // PROBE</div>
+<div>ST_MODE: MULTI_SCAN</div>
+</header>
 
-        <div class="status-bar" id="status-display">AWAITING OPTICAL INPUT</div>
+<div class="status-bar" id="status-display">AWAITING OPTICAL INPUT</div>
 
-        <section class="component-viz">
-            <div class="hex-sidebar"><div id="hex-data-stream"></div></div>
-            <video id="camera-feed" autoplay playsinline muted></video>
-            <div class="scan-line" id="scanner"></div>
+<section class="component-viz">
+<div class="hex-sidebar"><div id="hex-data-stream"></div></div>
+<video id="camera-feed" autoplay playsinline muted></video>
 
-            <div class="loading" id="threat-viz">
-                <div class="core-singularity" id="core"></div>
-                <div class="cube" id="viz-cube">
-                    <div class="c-side front"></div><div class="c-side back"></div>
-                    <div class="c-side top"></div><div class="c-side bottom"></div>
-                    <div class="c-side left"></div><div class="c-side right"></div>
-                </div>
-                <div class="pyramid" id="viz-pyramid">
-                    <div class="p-side p-front"></div>
-		            <div class="p-side p-back"></div>
-                    <div class="p-side p-left"></div>
-		            <div class="p-side p-right"></div>
-		            <div class="p-bottom"></div>
-                </div>
-                <div class="hull-intact" id="viz-intact">
-                    <div class="side f-front"></div><div class="side f-back"></div>
-                    <div class="side f-top"></div><div class="side f-bottom"></div>
-                    <div class="side f-left"></div><div class="side f-right"></div>
-                </div>
-                <div class="hull-broken" id="viz-broken">
-                    <div class="side f-front"></div><div class="side f-back"></div>
-                    <div class="side f-top"></div><div class="side f-bottom"></div>
-                    <div class="side f-left"></div><div class="side f-right"></div>
-                </div>
-            </div>
-        </section>
+<div class="loading" id="threat-viz">
+<div class="core-singularity" id="core"></div>
+<div class="cube" id="viz-cube">
+<div class="c-side front"></div><div class="c-side back"></div>
+<div class="c-side top"></div><div class="c-side bottom"></div>
+<div class="c-side left"></div><div class="c-side right"></div>
+</div>
+<div class="pyramid" id="viz-pyramid">
+<div class="p-side p-front"></div><div class="p-side p-back"></div>
+<div class="p-side p-left"></div><div class="p-side p-right"></div>
+</div>
+<div class="hull-intact" id="viz-intact">
+<div class="side f-front"></div><div class="side f-back"></div>
+<div class="side f-top"></div><div class="side f-bottom"></div>
+<div class="side f-left"></div><div class="side f-right"></div>
+</div>
+<div class="hull-broken" id="viz-broken">
+<div class="side f-front"></div><div class="side f-back"></div>
+<div class="side f-top"></div><div class="side f-bottom"></div>
+<div class="side f-left"></div><div class="side f-right"></div>
+</div>
+</div>
+</section>
 
-        <main>
-            <div id="mag-panel">
-                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(0,240,255,0.3); margin-bottom: 5px;">
-                    <span>EMF_FIELD_STRENGTH</span>
-                    <span id="mag-bearing">---°</span>
-                </div>
-                <div style="display: flex; gap: 8px; align-items: center;">
-                    <div style="flex: 1; height: 8px; background: rgba(0, 240, 255, 0.1); position: relative; overflow: hidden; border: 1px solid rgba(0,240,255,0.2);">
-                        <div id="mag-bar" style="width: 0%; height: 100%; background: var(--primary-color); transition: width 0.1s;"></div>
-                    </div>
-                    <span id="mag-uT" style="min-width: 60px; text-align: right;">0.00 uT</span>
-                </div>
-            </div>
+<main>
+<div id="mag-panel">
+<div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(0,240,255,0.3); margin-bottom: 5px;">
+<span>EMF_FIELD_STRENGTH</span>
+<span id="mag-bearing">---°</span>
+</div>
+<div style="display: flex; gap: 8px; align-items: center;">
+<div style="flex: 1; height: 8px; background: rgba(0, 240, 255, 0.1); position: relative; overflow: hidden; border: 1px solid rgba(0,240,255,0.2);">
+<div id="mag-bar" style="width: 0%; height: 100%; background: var(--primary-color); transition: width 0.1s;"></div>
+</div>
+<span id="mag-uT" style="min-width: 60px; text-align: right;">0.00 uT</span>
+</div>
+</div>
 
-            <div id="decoded-output" style="font-weight: bold; border-left: 3px solid var(--alert-color); padding-left: 10px; font-size: 0.9em; word-break: break-all;">
-                DATA EXTRACTION PENDING
-            </div>
-            <div class="intel-box">
-                <div style="display: flex; justify-content: space-between; font-size: 0.6em; margin-bottom: 5px;">
-                    <span>REPORT: AD-74.ZX</span>
-                    <span id="match-pct" style="background: var(--warning-color); color: #000; padding: 0 4px; font-weight: bold;">0.0% CONFIDENCE</span>
-                </div>
-                <p id="info-p" style="margin: 0; font-size: 0.7em; line-height: 1.4;">Analyzing optical signatures for data extraction...</p>
-            </div>
-            <button id="reset-btn">PURGE ANALYSIS // RESET INPUT</button>
-        </main>
-    </div>
+<div id="decoded-output" style="font-weight: bold; border-left: 3px solid var(--alert-color); padding-left: 10px; font-size: 0.9em; word-break: break-all;">
+NO DATA EXTRACTED
+</div>
+<div class="intel-box">
+<div style="display: flex; justify-content: space-between; font-size: 0.6em; margin-bottom: 5px;">
+<span>REPORT: AD-74.ZX</span>
+<span id="match-pct" style="background: var(--warning-color); color: #000; padding: 0 4px; font-weight: bold;">0.0% SYNC</span>
+</div>
+<p id="info-p" style="margin: 0; font-size: 0.7em; line-height: 1.4;">Analyzing optical signatures for payload extraction...</p>
+</div>
+<button id="reset-btn">PURGE_DECODED_DATA</button>
+</main>
+</div>
 
-    <script>
-        const codeReader = new ZXing.BrowserMultiFormatReader();
-        const hexStream = document.getElementById('hex-data-stream');
-        const phoenixChars = ["\uD802\uDD00", "\uD802\uDD01", "\uD802\uDD02", "\uD802\uDD03", "\uD802\uDD04", "\uD802\uDD05", "\uD802\uDD06", "\uD802\uDD07", "\uD802\uDD08"];
-        let isThreatActive = false;
+<script>
+const codeReader = new ZXing.BrowserMultiFormatReader();
+const hexStream = document.getElementById('hex-data-stream');
+const phoenixChars = ["\uD802\uDD00", "\uD802\uDD01", "\uD802\uDD02", "\uD802\uDD03", "\uD802\uDD04", "\uD802\uDD05", "\uD802\uDD06", "\uD802\uDD07", "\uD802\uDD08"];
+let isThreatActive = false;
 
-        const SCAN_LIBRARY = {
+const SCAN_LIBRARY = {
+            "EXPLOSIVES DETECTED": {
+                status: "CRITICAL THREAT DETECTED",
+                color: "var(--alert-color)",
+                info: "<strong>PROTOCOL AD-74:</strong> Class-4 controlled molecular shearing markers. Nano-particulate Accelerant [IS-109]. Barium-Nitrate residue. detected.",
+                shape: "cube",
+                sync: "CONFIDENCE // 89%"
+            },
+            "BIOHAZARD": {
+                status: "PATHOGEN DETECTED",
+                color: "var(--alert-color)",
+                info: "<strong>SENSORS ACTIVE:</strong> Airborne biological agent identified. Seal localized vents.",
+                shape: "pyramid",
+                sync: "SYNC // 82%"
+            },
+            "INTACT HULL SEGMENT": {
+                status: "STRUCTURAL SCAN: NOMINAL",
+                color: "var(--primary-color)",
+                info: "<strong>INTEGRITY:</strong> 100%. No stress fractures or surface damage detected.",
+                shape: "intact",
+                sync: "CONFIDENCE // 100%"
+            },
+            "DAMAGED HULL SEGMENT": {
+                status: "STRUCTURAL SCAN: FAILURE",
+                color: "var(--alert-color)",
+                info: "<strong>WARNING:</strong> Compromised hull integrity. Major stress fractures detected. Venting life support.",
+                shape: "broken",
+                sync: "CONFIDENCE // 78%"
+            },
+            "CLEARANCE": {
+                status: "ACCESS GRANTED // LEVEL 4",
+                color: "var(--primary-color)",
+                info: "<strong>ENCRYPTION KEY:</strong> valid. Personnel file AD-909 decrypted. Welcome, Director.",
+                shape: null,
+                sync: "100% SYNC"
+            },
+            "VOID": {
+                status: "NULL SIGNAL DETECTED",
+                color: "#ffffff",
+                info: "<strong>DATA CORRUPTION:</strong> The scanned matrix contains no readable forensic trail.",
+                shape: "pyramid",
+                sync: "0.0% SYNC"
+            }
             "EXPLOSIVES DETECTED": { status: "CRITICAL THREAT DETECTED", color: "var(--alert-color)", info: "<strong>PROTOCOL AD-74:</strong> Class-4 controlled molecular shearing markers. Nano-particulate Accelerant [IS-109]. detected.", shape: "cube", sync: "CONFIDENCE // 89%" },
             "BIOHAZARD": { status: "PATHOGEN DETECTED", color: "var(--alert-color)", info: "<strong>SENSORS ACTIVE:</strong> Airborne biological agent identified. Seal localized vents.", shape: "pyramid", sync: "SYNC // 82%" },
-            "INTACT HULL SEGMENT": { status: "STRUCTURAL SCAN: NOMINAL", color: "var(--alert-color)", info: "<strong>INTEGRITY:</strong> 100%. No stress fractures or surface damage detected.", shape: "intact", sync: "CONFIDENCE // 100%" },
+            "INTACT HULL SEGMENT": { status: "STRUCTURAL SCAN: NOMINAL", color: "var(--primary-color)", info: "<strong>INTEGRITY:</strong> 100%. No stress fractures or surface damage detected.", shape: "intact", sync: "CONFIDENCE // 100%" },
             "DAMAGED HULL SEGMENT": { status: "STRUCTURAL SCAN: FAILURE", color: "var(--alert-color)", info: "<strong>WARNING:</strong> Compromised hull integrity. Major stress fractures detected.", shape: "broken", sync: "CONFIDENCE // 78%" },
             "CLEARANCE": { status: "ACCESS GRANTED // LEVEL 4", color: "var(--primary-color)", info: "<strong>ENCRYPTION KEY:</strong> valid. Personnel file AD-909 decrypted.", shape: null, sync: "100% SYNC" },
             "VOID": { status: "NULL SIGNAL DETECTED", color: "#ffffff", info: "<strong>DATA CORRUPTION:</strong> The scanned matrix contains no readable forensic trail.", shape: "pyramid", sync: "0.0% SYNC" }
-        };
+};
 
-        const magBar = document.getElementById('mag-bar');
-        const magUT = document.getElementById('mag-uT');
-        const magBearing = document.getElementById('mag-bearing');
-        const uiContainer = document.getElementById('main-ui');
-        const videoFeed = document.getElementById('camera-feed');
+        // --- MAGNETOMETER LOGIC ---
+const magBar = document.getElementById('mag-bar');
+const magUT = document.getElementById('mag-uT');
+const magBearing = document.getElementById('mag-bearing');
+const uiContainer = document.getElementById('main-ui');
+const videoFeed = document.getElementById('camera-feed');
 
+        // Helper to update UI consistently
         function updateMagUI(strength) {
             magUT.innerText = strength + " uT";
             const percent = Math.min((strength / 100) * 100, 100);
@@ -327,113 +324,131 @@
             }
         }
 
-        function initMagnetometer() {
-            if (window.DeviceOrientationEvent) {
-                window.addEventListener('deviceorientation', (event) => {
-                    let heading = event.webkitCompassHeading || event.alpha;
-                    if (heading) magBearing.innerText = Math.floor(heading).toString().padStart(3, '0') + "°";
-                });
-            }
+function initMagnetometer() {
+            // Bearing (Compass)
+            // Compass Logic
+if (window.DeviceOrientationEvent) {
+window.addEventListener('deviceorientation', (event) => {
+let heading = event.webkitCompassHeading || event.alpha;
+if (heading) magBearing.innerText = Math.floor(heading).toString().padStart(3, '0') + "°";
+});
+}
 
+            // Field Strength (uT)
+            // --- ADDED: RANDOM ATMOSPHERIC FLUCTUATION (25% to 75%) ---
             setInterval(() => {
                 const currentVal = parseFloat(magUT.innerText);
+                // Only fluctuate if not currently detecting a real high-intensity field
                 if (currentVal < 80 || magUT.innerText === "0.00 uT") {
-                    const randomStrength = (Math.random() * (60 - 40) + 25).toFixed(2);
+                    const randomStrength = (Math.random() * (75 - 25) + 25).toFixed(2);
                     updateMagUI(randomStrength);
                 }
             }, 200);
 
-            if ('Magnetometer' in window) {
-                try {
-                    const mag = new Magnetometer({frequency: 10});
-                    mag.addEventListener('reading', () => {
-                        const strength = Math.sqrt(mag.x**2 + mag.y**2 + mag.z**2).toFixed(2);
+            // Real Magnetometer Data
+if ('Magnetometer' in window) {
+try {
+const mag = new Magnetometer({frequency: 10});
+mag.addEventListener('reading', () => {
+const strength = Math.sqrt(mag.x**2 + mag.y**2 + mag.z**2).toFixed(2);
+                        magUT.innerText = strength + " uT";
+                        const percent = Math.min((strength / 100) * 100, 100);
+                        magBar.style.width = percent + "%";
+
+                        if (strength > 80) {
+                            uiContainer.classList.add('glitch-active');
+                            videoFeed.classList.add('feed-glitch');
+                            magBar.style.background = 'var(--alert-color)';
+                            if(Math.random() > 0.9) document.getElementById('status-display').innerText = "EMF_INTERFERENCE_CRITICAL";
+                        } else {
+                            uiContainer.classList.remove('glitch-active');
+                            videoFeed.classList.remove('feed-glitch');
+                            magBar.style.background = 'var(--primary-color)';
+                        }
                         updateMagUI(strength);
-                    });
-                    mag.start();
+});
+mag.start();
+                } catch (e) { magUT.innerText = "SENSOR_ERR"; }
+            } else { magUT.innerText = "NO_HARDWARE"; }
                 } catch (e) { console.warn("Sensor restricted."); }
             }
-        }
+}
 
-        function updateUI() {
-            let data = "";
-            for(let i=0; i<18; i++) {
-                data += "0x" + Math.floor(Math.random()*256).toString(16).toUpperCase().padStart(2, '0') + " ";
-                if(i % 2 !== 0) data += "<br>";
-            }
-            hexStream.innerHTML = data;
-            document.querySelectorAll('.side, .c-side, .p-side').forEach(f => {
-                if(Math.random() > 0.9) f.innerText = phoenixChars[Math.floor(Math.random()*phoenixChars.length)];
-            });
-        }
-        setInterval(updateUI, 150);
+function updateUI() {
+let data = "";
+for(let i=0; i<18; i++) {
+data += "0x" + Math.floor(Math.random()*256).toString(16).toUpperCase().padStart(2, '0') + " ";
+if(i % 2 !== 0) data += "<br>";
+}
+hexStream.innerHTML = data;
+document.querySelectorAll('.side, .c-side, .p-side').forEach(f => {
+if(Math.random() > 0.9) f.innerText = phoenixChars[Math.floor(Math.random()*phoenixChars.length)];
+});
+}
+setInterval(updateUI, 150);
 
-        async function startSystem() {
-            try {
-                const videoDevices = await codeReader.listVideoInputDevices();
-                const selectedDevice = videoDevices[0].deviceId;
-                codeReader.decodeFromVideoDevice(selectedDevice, 'camera-feed', (result) => {
-                    if (result && !isThreatActive) {
-                        const text = result.getText().toUpperCase();
-                        document.getElementById('decoded-output').innerText = text;
-                        if (SCAN_LIBRARY[text]) applyScanResult(SCAN_LIBRARY[text]);
-                    }
-                });
-                document.getElementById('line-v').style.animation = 'scan-v 1s forwards';
-                document.getElementById('line-h').style.animation = 'scan-h 1s forwards 0.5s';
-                setTimeout(() => { document.getElementById('boot-overlay').style.display = 'none'; document.getElementById('main-ui').style.opacity = '1'; }, 2000);
+async function startSystem() {
+try {
+const videoDevices = await codeReader.listVideoInputDevices();
+const selectedDevice = videoDevices[0].deviceId;
+codeReader.decodeFromVideoDevice(selectedDevice, 'camera-feed', (result) => {
+if (result && !isThreatActive) {
+const text = result.getText().toUpperCase();
+document.getElementById('decoded-output').innerText = text;
+if (SCAN_LIBRARY[text]) applyScanResult(SCAN_LIBRARY[text]);
+}
+});
+document.getElementById('line-v').style.animation = 'scan-v 1s forwards';
+document.getElementById('line-h').style.animation = 'scan-h 1s forwards 0.5s';
+setTimeout(() => { document.getElementById('boot-overlay').style.display = 'none'; document.getElementById('main-ui').style.opacity = '1'; }, 2000);
+            } catch (err) { document.getElementById('loading-text').innerText = "CAMERA_ERROR"; }
             } catch (err) { document.getElementById('loading-text').innerText = "HARDWARE_ERROR"; }
-        }
+}
 
-        function applyScanResult(data) {
-            const status = document.getElementById('status-display');
-            status.innerText = data.status; 
-            status.style.color = data.color;
-            status.style.borderColor = data.color;
+function applyScanResult(data) {
+const status = document.getElementById('status-display');
+            status.innerText = data.status;
+            status.style.background = data.color;
+            status.innerText = data.status; status.style.background = data.color;
+document.getElementById('match-pct').innerText = data.sync;
+document.getElementById('match-pct').style.background = data.color;
+document.getElementById('info-p').innerHTML = data.info;
+
+if (data.shape) {
+isThreatActive = true;
+document.getElementById('camera-feed').style.display = 'none';
+document.getElementById('threat-viz').style.display = 'block';
+document.getElementById('core').style.display = (data.shape === 'cube') ? 'block' : 'none';
+document.getElementById('viz-cube').style.display = (data.shape === 'cube') ? 'block' : 'none';
+document.getElementById('viz-pyramid').style.display = (data.shape === 'pyramid') ? 'block' : 'none';
+document.getElementById('viz-intact').style.display = (data.shape === 'intact') ? 'block' : 'none';
+document.getElementById('viz-broken').style.display = (data.shape === 'broken') ? 'block' : 'none';
+}
+}
+
+document.getElementById('reset-btn').addEventListener('click', () => {
+isThreatActive = false;
+document.getElementById('decoded-output').innerText = "NO DATA EXTRACTED";
+document.getElementById('camera-feed').style.display = 'block';
+document.getElementById('threat-viz').style.display = 'none';
+const status = document.getElementById('status-display');
+status.innerText = "SYSTEM PURGED";
+setTimeout(() => { status.innerText = "AWAITING OPTICAL INPUT"; status.style.background = "rgba(255, 51, 51, 0.15)"; }, 600);
+});
+
+document.getElementById('connect-btn').addEventListener('click', () => { 
+document.getElementById('entry-screen').style.display = 'none'; 
+document.getElementById('boot-overlay').style.display = 'flex'; 
             
-            document.getElementById('match-pct').innerText = data.sync;
-            document.getElementById('match-pct').style.background = data.color;
-            document.getElementById('info-p').innerHTML = data.info;
-
-            if (data.shape) {
-                isThreatActive = true;
-                document.getElementById('camera-feed').style.display = 'none';
-                document.getElementById('scanner').style.display = 'block';
-                document.getElementById('threat-viz').style.display = 'block';
-                document.getElementById('core').style.display = (data.shape === 'cube') ? 'block' : 'none';
-                document.getElementById('viz-cube').style.display = (data.shape === 'cube') ? 'block' : 'none';
-                document.getElementById('viz-pyramid').style.display = (data.shape === 'pyramid') ? 'block' : 'none';
-                document.getElementById('viz-intact').style.display = (data.shape === 'intact') ? 'block' : 'none';
-                document.getElementById('viz-broken').style.display = (data.shape === 'broken') ? 'block' : 'none';
+            // Requesting permissions for iOS and starting sensors
+if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+DeviceOrientationEvent.requestPermission().then(initMagnetometer);
+            } else {
+                initMagnetometer();
             }
-        }
-
-        document.getElementById('reset-btn').addEventListener('click', () => {
-            isThreatActive = false;
-            document.getElementById('decoded-output').innerText = "DATA EXTRACTION PENDING";
-            document.getElementById('camera-feed').style.display = 'block';
-            document.getElementById('scanner').style.display = 'none';
-            document.getElementById('threat-viz').style.display = 'none';
-            
-            const status = document.getElementById('status-display');
-            status.innerText = "SYSTEM PURGED";
-            status.style.color = "var(--alert-color)";
-            status.style.borderColor = "var(--alert-color)";
-            
-            setTimeout(() => { 
-                status.innerText = "AWAITING OPTICAL INPUT"; 
-                status.style.background = "#000"; 
-            }, 600);
-        });
-
-        document.getElementById('connect-btn').addEventListener('click', () => { 
-            document.getElementById('entry-screen').style.display = 'none'; 
-            document.getElementById('boot-overlay').style.display = 'flex'; 
-            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-                DeviceOrientationEvent.requestPermission().then(initMagnetometer);
             } else { initMagnetometer(); }
-            startSystem(); 
-        });
-    </script>
+startSystem(); 
+});
+</script>
 </body>
 </html>
