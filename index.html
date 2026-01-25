@@ -237,7 +237,7 @@
                 </div>
                 <p id="info-p" style="margin: 0; font-size: 0.7em; line-height: 1.4;">Analyzing optical signatures for data extraction...</p>
             </div>
-            <button id="reset-btn">PURGE ANALYSIS // RESET INPUT</button>
+            <button id="reset-btn" onmousedown="playTap(650, 0.06)" onmouseup="playTap(500, 0.04)">PURGE ANALYSIS // RESET INPUT</button>
         </main>
     </div>
 
@@ -263,6 +263,20 @@
             osc.stop(audioCtx.currentTime + duration);
         }
 
+        function playTap(freq, vol) {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.05);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.05);
+        }
+
         const SCAN_LIBRARY = {
             "EXPLOSIVES DETECTED": { status: "CRITICAL THREAT DETECTED", color: "var(--alert-color)", info: "<strong>PROTOCOL AD-74:</strong> Class-4 controlled molecular shearing markers. Nano-particulate Accelerant [IS-109]. detected.", shape: "cube", sync: "CONFIDENCE // 89%" },
             "BIOHAZARD": { status: "PATHOGEN DETECTED", color: "var(--alert-color)", info: "<strong>SENSORS ACTIVE:</strong> Airborne biological agent identified. Seal localized vents.", shape: "pyramid", sync: "SYNC // 82%" },
@@ -283,10 +297,7 @@
             const percent = Math.min((strength / 100) * 100, 100);
             magBar.style.width = percent + "%";
 
-            // Geiger-style audio feedback for magnetism
-            if (strength > 40 && Math.random() > 0.8) {
-                playSound(100 + (strength * 2), 'sine', 0.05, 0.02);
-            }
+            // Geiger clicks removed per request
 
             if (strength > 80) {
                 uiContainer.classList.add('glitch-active');
@@ -299,7 +310,7 @@
             }
         }
 
-        // --- RANDOM POWER INSTABILITY ---
+        // --- RANDOM POWER INSTABILITY (UPDATED) ---
         function triggerRandomFlicker() {
             const ui = document.getElementById('main-ui');
             const status = document.getElementById('status-display');
@@ -307,14 +318,15 @@
 
             ui.classList.add('instability-event');
             status.innerText = "WARNING: POWER INSTABILITY";
-            playSound(60, 'sawtooth', 0.4, 0.05); // Low brown-note buzz
+            playSound(120, 'sawtooth', 0.4, 0.05); // Glitch buzz updated to 120Hz
 
             setTimeout(() => {
                 ui.classList.remove('instability-event');
                 if (!isThreatActive) status.innerText = prevStatus;
             }, 450);
 
-            const nextDelay = Math.floor(Math.random() * (120000 - 30000 + 1)) + 30000;
+            // Frequency updated to 10-30 seconds
+            const nextDelay = Math.floor(Math.random() * (30000 - 10000 + 1)) + 10000;
             setTimeout(triggerRandomFlicker, nextDelay);
         }
 
@@ -422,7 +434,8 @@
         });
 
         document.getElementById('connect-btn').addEventListener('click', () => { 
-            audioCtx.resume(); // Required to unlock audio in browsers
+            audioCtx.resume(); 
+            playTap(650, 0.06); // Added Poly-Tap to connect button
             document.getElementById('entry-screen').style.display = 'none'; 
             document.getElementById('boot-overlay').style.display = 'flex'; 
             triggerRandomFlicker();
