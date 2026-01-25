@@ -25,28 +25,29 @@
             display: flex; flex-direction: column;
         }
 
+        /* --- NEW ENHANCED GLITCH ANIMATIONS --- */
         @keyframes hud-shudder {
-            0% { transform: translate(0,0); filter: hue-rotate(0deg); }
-            25% { transform: translate(-2px, 1px); filter: hue-rotate(90deg) contrast(1.5); }
-            50% { transform: translate(2px, -1px); opacity: 0.8; }
-            75% { transform: translate(-1px, -1px); filter: invert(0.1); }
-            100% { transform: translate(0,0); }
+            0% { transform: translate(0,0); text-shadow: none; }
+            20% { transform: translate(-5px, 2px); text-shadow: 2px 0 red, -2px 0 blue; }
+            40% { transform: translate(5px, -2px); text-shadow: -2px 0 red, 2px 0 blue; }
+            60% { transform: translate(-3px, 1px); clip-path: inset(10% 0 20% 0); }
+            80% { transform: translate(3px, -1px); clip-path: inset(30% 0 5% 0); }
+            100% { transform: translate(0,0); text-shadow: none; }
         }
 
         @keyframes power-flicker {
-            0%   { opacity: 1; filter: brightness(1); }
-            10%  { opacity: 0.4; filter: brightness(1.2); }
-            15%  { opacity: 0.9; }
-            20%  { opacity: 0.2; }
-            25%  { opacity: 1; filter: brightness(1); }
-            80%  { opacity: 1; }
-            85%  { opacity: 0.7; }
-            90%  { opacity: 1; }
+            0%   { opacity: 1; filter: brightness(1) contrast(1); }
+            5%   { opacity: 0.2; filter: brightness(3) contrast(2); }
+            10%  { opacity: 0.8; }
+            15%  { opacity: 0.1; transform: skewX(20deg); }
+            20%  { opacity: 1; transform: skewX(0deg); }
+            50%  { opacity: 0.7; filter: saturate(5); }
+            100% { opacity: 1; filter: brightness(1); }
         }
 
-        .glitch-active { animation: hud-shudder 0.15s infinite; border-color: var(--alert-color) !important; }
-        .feed-glitch { filter: sepia(1) hue-rotate(0deg) saturate(8) contrast(2) !important; }
-        .instability-event { animation: power-flicker 0.4s ease-out; }
+        .glitch-active { animation: hud-shudder 0.1s infinite; border-color: var(--alert-color) !important; }
+        .feed-glitch { filter: sepia(1) hue-rotate(-45deg) saturate(10) contrast(3) !important; }
+        .instability-event { animation: power-flicker 0.3s steps(2) infinite; }
 
         #entry-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -167,7 +168,7 @@
             background: rgba(255, 51, 51, 0.1); 
             color: var(--alert-color); 
             border: 1px solid var(--alert-color); 
-            padding: 10px; 
+            padding: 12px; 
             cursor: pointer; 
             font-family: 'Space Mono'; 
             font-size: 0.7em; 
@@ -286,7 +287,6 @@
             osc.stop(audioCtx.currentTime + 0.05);
         }
 
-        // --- BACKGROUND GEIGER CLICKER ---
         function startGeigerCounter() {
             const playClick = () => {
                 const osc = audioCtx.createOscillator();
@@ -361,7 +361,6 @@
                     if (heading) magBearing.innerText = Math.floor(heading).toString().padStart(3, '0') + "°";
                 });
             }
-
             setInterval(() => {
                 const currentVal = parseFloat(magUT.innerText);
                 if (currentVal < 80 || magUT.innerText === "0.00 uT") {
@@ -369,7 +368,6 @@
                     updateMagUI(randomStrength);
                 }
             }, 200);
-
             if ('Magnetometer' in window) {
                 try {
                     const mag = new Magnetometer({frequency: 10});
@@ -439,8 +437,6 @@
         document.getElementById('reset-btn').addEventListener('click', function() {
             const btn = this;
             playSound(150, 'triangle', 0.5, 0.2); 
-            
-            // Temporary Color Change
             btn.style.background = "var(--alert-color)"; 
             btn.style.color = "#000"; 
             setTimeout(() => {
@@ -452,16 +448,13 @@
             document.getElementById('decoded-output').innerText = "DATA EXTRACTION PENDING";
             document.getElementById('camera-feed').style.display = 'block';
             document.getElementById('threat-viz').style.display = 'none';
-            
             const status = document.getElementById('status-display');
             status.innerText = "SYSTEM PURGED";
             status.style.color = "var(--alert-color)";       
             status.style.borderColor = "var(--alert-color)"; 
-
             document.getElementById('match-pct').innerText = "0.0% CONFIDENCE";
             document.getElementById('match-pct').style.background = "var(--warning-color)";
             document.getElementById('info-p').innerHTML = "Analyzing optical signatures for data extraction...";
-            
             setTimeout(() => { 
                 status.innerText = "AWAITING OPTICAL INPUT"; 
                 status.style.background = "#000"; 
