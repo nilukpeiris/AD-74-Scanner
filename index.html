@@ -323,7 +323,7 @@
             setTimeout(() => {
                 ui.classList.remove('instability-event');
                 if (!isThreatActive) status.innerText = prevStatus;
-            }, 450);
+            }, 700);
 
             // Frequency updated to 10-30 seconds
             const nextDelay = Math.floor(Math.random() * (30000 - 10000 + 1)) + 10000;
