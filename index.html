@@ -49,7 +49,7 @@
         .feed-glitch { filter: sepia(1) hue-rotate(0deg) saturate(8) contrast(2) !important; }
         .instability-event { animation: power-flicker 0.4s ease-out; }
 
-        /* --- SCREENS --- */
+        /* --- UI ELEMENTS --- */
         #entry-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--bg-color); z-index: 300;
@@ -90,7 +90,6 @@
         #camera-feed {
             width: 100%; height: 100%; object-fit: cover;
             filter: grayscale(1) contrast(1.4) brightness(0.8) sepia(1) hue-rotate(140deg); opacity: 0.6;
-            transition: filter 0.2s;
         }
 
         .hex-sidebar {
@@ -104,65 +103,48 @@
             font-size: 0.65em; background: rgba(0, 240, 255, 0.05);
         }
 
-        .loading { display: none; width: 120px; height: 120px; perspective: 1000px; position: relative; z-index: 5; }
-        @keyframes rotate { from { transform: rotateY(0deg) rotateX(20deg); } to { transform: rotateY(360deg) rotateX(20deg); } }
-
-        .side { 
-            position: absolute; border: 1px solid var(--primary-color); 
-            background: rgba(0, 240, 255, 0.08); display: flex; align-items: center; justify-content: center; font-size: 10px; 
+        .status-bar { background: #000; padding: 8px; margin: 10px 0; font-size: 0.8em; text-align: center; border: 1px solid var(--alert-color); color: var(--alert-color); transition: 0.3s; }
+        
+        /* Updated main container to pin button to bottom */
+        main { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: space-between; 
+            border-top: 1px solid rgba(0, 240, 255, 0.2); 
+            padding-top: 10px; 
+            overflow: hidden; 
         }
 
-        .f-front  { width: 100px; height: 100px; transform: translateZ(5px); }
-        .f-back   { width: 100px; height: 100px; transform: translateZ(-5px) rotateY(180deg); }
-        .f-top    { width: 100px; height: 10px; transform: rotateX(90deg) translateZ(5px); }
-        .f-bottom { width: 100px; height: 10px; transform: rotateX(-90deg) translateZ(95px); }
-        .f-left   { width: 10px;  height: 100px; transform: rotateY(-90deg) translateZ(5px); }
-        .f-right  { width: 10px;  height: 100px; transform: rotateY(90deg) translateZ(95px); }
+        /* Reset Button with Red/Black Active State */
+        #reset-btn { 
+            margin-top: auto; 
+            background: rgba(255, 51, 51, 0.1); 
+            color: var(--alert-color); 
+            border: 1px solid var(--alert-color); 
+            padding: 15px; 
+            cursor: pointer; 
+            font-family: 'Space Mono'; 
+            font-size: 0.75em;
+            width: 100%;
+            transition: background 0.05s, color 0.05s;
+        }
 
-        .cube { display: none; width: 80px; height: 80px; position: absolute; top: 20px; left: 20px; transform-style: preserve-3d; animation: rotate 8s infinite linear; }
-        .c-side { position: absolute; width: 80px; height: 80px; border: 1px solid var(--primary-color); background: rgba(0, 240, 255, 0.08); display: flex; align-items: center; justify-content: center; font-size: 10px; }
+        #reset-btn:active {
+            background: var(--alert-color) !important;
+            color: #000 !important;
+        }
+
+        .intel-box { border: 1px solid var(--warning-color); padding: 10px; color: var(--warning-color); background: rgba(255, 204, 0, 0.05); margin-top: 10px; }
+
+        /* 3D VIZ */
+        .loading { display: none; width: 120px; height: 120px; perspective: 1000px; position: relative; z-index: 5; }
+        @keyframes rotate { from { transform: rotateY(0deg) rotateX(20deg); } to { transform: rotateY(360deg) rotateX(20deg); } }
+        .cube { width: 80px; height: 80px; transform-style: preserve-3d; animation: rotate 8s infinite linear; }
+        .c-side { position: absolute; width: 80px; height: 80px; border: 1px solid var(--primary-color); background: rgba(0, 240, 255, 0.08); }
         .front { transform: translateZ(40px); } .back { transform: translateZ(-40px) rotateY(180deg); }
         .top { transform: rotateX(90deg) translateZ(40px); } .bottom { transform: rotateX(-90deg) translateZ(40px); }
         .left { transform: rotateY(-90deg) translateZ(40px); } .right { transform: rotateY(90deg) translateZ(40px); }
-
-        .pyramid { display: none; width: 100px; height: 100px; position: absolute; top: 10px; left: 10px; transform-style: preserve-3d; animation: rotate 5s infinite linear; }
-        .p-side {
-            position: absolute; width: 0; height: 0;
-            border-left: 50px solid transparent; border-right: 50px solid transparent;
-            border-bottom: 90px solid rgba(0, 240, 255, 0.2); border-top: none;
-            display: flex; align-items: center; justify-content: center; color: var(--primary-color);
-        }
-        .p-front { transform: rotateY(0deg) translateZ(25px) rotateX(30deg); transform-origin: 50% 100%; }
-        .p-back  { transform: rotateY(180deg) translateZ(25px) rotateX(30deg); transform-origin: 50% 100%; }
-        .p-left  { transform: rotateY(-90deg) translateZ(25px) rotateX(30deg); transform-origin: 50% 100%; }
-        .p-right { transform: rotateY(90deg) translateZ(25px) rotateX(30deg); transform-origin: 50% 100%; }
-
-        .hull-intact { display: none; width: 100px; height: 100px; position: absolute; top: 10px; left: 10px; transform-style: preserve-3d; animation: rotate 8s infinite linear; }
-        .hull-broken { display: none; width: 100px; height: 100px; position: absolute; top: 10px; left: 10px; transform-style: preserve-3d; animation: rotate 8s infinite linear; }
-        .hull-broken .side {
-            border-color: var(--alert-color); color: var(--alert-color);
-            background: radial-gradient(circle, rgba(255, 51, 51, 0.2) 0%, rgba(255, 51, 51, 0.05) 100%);
-            animation: danger-pulse 1.5s infinite ease-in-out;
-        }
-
-        @keyframes danger-pulse {
-            0%, 100% { box-shadow: inset 0 0 10px rgba(255, 51, 51, 0.5); border-color: rgba(255, 51, 51, 1); }
-            50% { box-shadow: inset 0 0 30px rgba(255, 51, 51, 0.8); border-color: rgba(255, 51, 51, 0.4); }
-        }
-
-        .core-singularity {
-            position: absolute; top: 50%; left: 50%; width: 8px; height: 8px; 
-            background: #fff; border-radius: 50%; transform: translate(-50%, -50%);
-            box-shadow: 0 0 20px 5px var(--alert-color); animation: core-pulse 1.5s infinite ease-in-out;
-            z-index: 6; display: none;
-        }
-
-        @keyframes core-pulse { 0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; } 50% { transform: translate(-50%, -50%) scale(2.5); opacity: 1; } }
-
-        main { flex: 1; display: flex; flex-direction: column; border-top: 1px solid rgba(0, 240, 255, 0.2); padding-top: 10px; overflow-y: auto; }
-        .intel-box { border: 1px solid var(--warning-color); padding: 10px; color: var(--warning-color); background: rgba(255, 204, 0, 0.05); margin-top: 10px; }
-        .status-bar { background: #000; padding: 8px; margin: 10px 0; font-size: 0.8em; text-align: center; border: 1px solid var(--alert-color); color: var(--alert-color); transition: 0.3s; }
-        #reset-btn { margin-top: 10px; background: rgba(255, 51, 51, 0.1); color: var(--alert-color); border: 1px solid var(--alert-color); padding: 8px; cursor: pointer; font-family: 'Space Mono'; font-size: 0.7em; }
     </style>
 </head>
 <body>
@@ -188,68 +170,47 @@
         <section class="component-viz">
             <div class="hex-sidebar"><div id="hex-data-stream"></div></div>
             <video id="camera-feed" autoplay playsinline muted></video>
-
             <div class="loading" id="threat-viz">
-                <div class="core-singularity" id="core"></div>
                 <div class="cube" id="viz-cube">
                     <div class="c-side front"></div><div class="c-side back"></div>
                     <div class="c-side top"></div><div class="c-side bottom"></div>
                     <div class="c-side left"></div><div class="c-side right"></div>
                 </div>
-                <div class="pyramid" id="viz-pyramid">
-                    <div class="p-side p-front"></div><div class="p-side p-back"></div>
-                    <div class="p-side p-left"></div><div class="p-side p-right"></div>
-                </div>
-                <div class="hull-intact" id="viz-intact">
-                    <div class="side f-front"></div><div class="side f-back"></div>
-                    <div class="side f-top"></div><div class="side f-bottom"></div>
-                    <div class="side f-left"></div><div class="side f-right"></div>
-                </div>
-                <div class="hull-broken" id="viz-broken">
-                    <div class="side f-front"></div><div class="side f-back"></div>
-                    <div class="side f-top"></div><div class="side f-bottom"></div>
-                    <div class="side f-left"></div><div class="side f-right"></div>
-                </div>
             </div>
         </section>
 
         <main>
-            <div id="mag-panel">
-                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(0,240,255,0.3); margin-bottom: 5px;">
-                    <span>EMF_FIELD_STRENGTH</span>
-                    <span id="mag-bearing">---°</span>
-                </div>
-                <div style="display: flex; gap: 8px; align-items: center;">
-                    <div style="flex: 1; height: 8px; background: rgba(0, 240, 255, 0.1); position: relative; overflow: hidden; border: 1px solid rgba(0,240,255,0.2);">
-                        <div id="mag-bar" style="width: 0%; height: 100%; background: var(--primary-color); transition: width 0.1s;"></div>
+            <div id="data-stack">
+                <div id="mag-panel">
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(0,240,255,0.3); margin-bottom: 5px;">
+                        <span>EMF_FIELD_STRENGTH</span>
+                        <span id="mag-bearing">---°</span>
                     </div>
-                    <span id="mag-uT" style="min-width: 60px; text-align: right;">0.00 uT</span>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <div style="flex: 1; height: 8px; background: rgba(0, 240, 255, 0.1); position: relative; overflow: hidden; border: 1px solid rgba(0,240,255,0.2);">
+                            <div id="mag-bar" style="width: 0%; height: 100%; background: var(--primary-color); transition: width 0.1s;"></div>
+                        </div>
+                        <span id="mag-uT" style="min-width: 60px; text-align: right;">0.00 uT</span>
+                    </div>
+                </div>
+                <div id="decoded-output" style="font-weight: bold; border-left: 3px solid var(--alert-color); padding-left: 10px; font-size: 0.9em; word-break: break-all; margin-bottom: 10px;">
+                    DATA EXTRACTION PENDING
+                </div>
+                <div class="intel-box">
+                    <div id="match-pct" style="font-size: 0.6em; background: var(--warning-color); color: #000; padding: 0 4px; display: inline-block; margin-bottom: 5px;">0.0% CONFIDENCE</div>
+                    <p id="info-p" style="margin: 0; font-size: 0.7em; line-height: 1.4;">Analyzing optical signatures for data extraction...</p>
                 </div>
             </div>
-
-            <div id="decoded-output" style="font-weight: bold; border-left: 3px solid var(--alert-color); padding-left: 10px; font-size: 0.9em; word-break: break-all;">
-                DATA EXTRACTION PENDING
-            </div>
-            <div class="intel-box">
-                <div style="display: flex; justify-content: space-between; font-size: 0.6em; margin-bottom: 5px;">
-                    <span>REPORT: AD-74.ZX</span>
-                    <span id="match-pct" style="background: var(--warning-color); color: #000; padding: 0 4px; font-weight: bold;">0.0% CONFIDENCE</span>
-                </div>
-                <p id="info-p" style="margin: 0; font-size: 0.7em; line-height: 1.4;">Analyzing optical signatures for data extraction...</p>
-            </div>
+            
             <button id="reset-btn" onmousedown="playTap(650, 0.06)" onmouseup="playTap(500, 0.04)">PURGE ANALYSIS // RESET INPUT</button>
         </main>
     </div>
 
     <script>
         const codeReader = new ZXing.BrowserMultiFormatReader();
-        const hexStream = document.getElementById('hex-data-stream');
-        const phoenixChars = ["\uD802\uDD00", "\uD802\uDD01", "\uD802\uDD02", "\uD802\uDD03", "\uD802\uDD04", "\uD802\uDD05", "\uD802\uDD06", "\uD802\uDD07", "\uD802\uDD08"];
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         let isThreatActive = false;
 
-        // --- AUDIO ENGINE ---
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        
         function playSound(freq, type, duration, volume = 0.1) {
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
@@ -277,99 +238,20 @@
             osc.stop(audioCtx.currentTime + 0.05);
         }
 
-        const SCAN_LIBRARY = {
-            "EXPLOSIVES DETECTED": { status: "CRITICAL THREAT DETECTED", color: "var(--alert-color)", info: "<strong>PROTOCOL AD-74:</strong> Class-4 controlled molecular shearing markers. Nano-particulate Accelerant [IS-109]. detected.", shape: "cube", sync: "CONFIDENCE // 89%" },
-            "BIOHAZARD": { status: "PATHOGEN DETECTED", color: "var(--alert-color)", info: "<strong>SENSORS ACTIVE:</strong> Airborne biological agent identified. Seal localized vents.", shape: "pyramid", sync: "SYNC // 82%" },
-            "INTACT HULL SEGMENT": { status: "STRUCTURAL SCAN: NOMINAL", color: "var(--alert-color)", info: "<strong>INTEGRITY:</strong> 100%. No stress fractures or surface damage detected.", shape: "intact", sync: "CONFIDENCE // 100%" },
-            "DAMAGED HULL SEGMENT": { status: "STRUCTURAL SCAN: FAILURE", color: "var(--alert-color)", info: "<strong>WARNING:</strong> Compromised hull integrity. Major stress fractures detected.", shape: "broken", sync: "CONFIDENCE // 78%" },
-            "CLEARANCE": { status: "ACCESS GRANTED // LEVEL 4", color: "var(--primary-color)", info: "<strong>ENCRYPTION KEY:</strong> valid. Personnel file AD-909 decrypted.", shape: null, sync: "100% SYNC" },
-            "VOID": { status: "NULL SIGNAL DETECTED", color: "#ffffff", info: "<strong>DATA CORRUPTION:</strong> The scanned matrix contains no readable forensic trail.", shape: "pyramid", sync: "0.0% SYNC" }
-        };
-
-        const magBar = document.getElementById('mag-bar');
-        const magUT = document.getElementById('mag-uT');
-        const magBearing = document.getElementById('mag-bearing');
-        const uiContainer = document.getElementById('main-ui');
-        const videoFeed = document.getElementById('camera-feed');
-
-        function updateMagUI(strength) {
-            magUT.innerText = strength + " uT";
-            const percent = Math.min((strength / 100) * 100, 100);
-            magBar.style.width = percent + "%";
-
-            // Geiger clicks removed per request
-
-            if (strength > 80) {
-                uiContainer.classList.add('glitch-active');
-                videoFeed.classList.add('feed-glitch');
-                magBar.style.background = 'var(--alert-color)';
-            } else {
-                uiContainer.classList.remove('glitch-active');
-                videoFeed.classList.remove('feed-glitch');
-                magBar.style.background = 'var(--primary-color)';
-            }
-        }
-
-        // --- RANDOM POWER INSTABILITY (UPDATED) ---
         function triggerRandomFlicker() {
             const ui = document.getElementById('main-ui');
             const status = document.getElementById('status-display');
             const prevStatus = status.innerText;
-
             ui.classList.add('instability-event');
             status.innerText = "WARNING: POWER INSTABILITY";
-            playSound(120, 'sawtooth', 0.4, 0.05); // Glitch buzz updated to 120Hz
-
+            playSound(120, 'sawtooth', 0.4, 0.05);
             setTimeout(() => {
                 ui.classList.remove('instability-event');
                 if (!isThreatActive) status.innerText = prevStatus;
             }, 450);
-
-            // Frequency updated to 10-30 seconds
             const nextDelay = Math.floor(Math.random() * (30000 - 10000 + 1)) + 10000;
             setTimeout(triggerRandomFlicker, nextDelay);
         }
-
-        function initMagnetometer() {
-            if (window.DeviceOrientationEvent) {
-                window.addEventListener('deviceorientation', (event) => {
-                    let heading = event.webkitCompassHeading || event.alpha;
-                    if (heading) magBearing.innerText = Math.floor(heading).toString().padStart(3, '0') + "°";
-                });
-            }
-
-            setInterval(() => {
-                const currentVal = parseFloat(magUT.innerText);
-                if (currentVal < 80 || magUT.innerText === "0.00 uT") {
-                    const randomStrength = (Math.random() * (60 - 40) + 25).toFixed(2);
-                    updateMagUI(randomStrength);
-                }
-            }, 200);
-
-            if ('Magnetometer' in window) {
-                try {
-                    const mag = new Magnetometer({frequency: 10});
-                    mag.addEventListener('reading', () => {
-                        const strength = Math.sqrt(mag.x**2 + mag.y**2 + mag.z**2).toFixed(2);
-                        updateMagUI(strength);
-                    });
-                    mag.start();
-                } catch (e) { console.warn("Sensor restricted."); }
-            }
-        }
-
-        function updateUI() {
-            let data = "";
-            for(let i=0; i<18; i++) {
-                data += "0x" + Math.floor(Math.random()*256).toString(16).toUpperCase().padStart(2, '0') + " ";
-                if(i % 2 !== 0) data += "<br>";
-            }
-            hexStream.innerHTML = data;
-            document.querySelectorAll('.side, .c-side, .p-side').forEach(f => {
-                if(Math.random() > 0.9) f.innerText = phoenixChars[Math.floor(Math.random()*phoenixChars.length)];
-            });
-        }
-        setInterval(updateUI, 150);
 
         async function startSystem() {
             try {
@@ -377,73 +259,53 @@
                 const selectedDevice = videoDevices[0].deviceId;
                 codeReader.decodeFromVideoDevice(selectedDevice, 'camera-feed', (result) => {
                     if (result && !isThreatActive) {
-                        const text = result.getText().toUpperCase();
-                        document.getElementById('decoded-output').innerText = text;
-                        if (SCAN_LIBRARY[text]) applyScanResult(SCAN_LIBRARY[text]);
+                        isThreatActive = true;
+                        playSound(880, 'sine', 0.1, 0.1); 
+                        document.getElementById('decoded-output').innerText = result.getText();
+                        document.getElementById('status-display').innerText = "THREAT IDENTIFIED";
+                        document.getElementById('camera-feed').style.display = 'none';
+                        document.getElementById('threat-viz').style.display = 'block';
+                        document.getElementById('match-pct').innerText = "100% SYNC";
+                        document.getElementById('info-p').innerHTML = "<strong>CRITICAL:</strong> Internal structural anomalies detected.";
                     }
                 });
                 document.getElementById('line-v').style.animation = 'scan-v 1s forwards';
                 document.getElementById('line-h').style.animation = 'scan-h 1s forwards 0.5s';
-                setTimeout(() => { document.getElementById('boot-overlay').style.display = 'none'; document.getElementById('main-ui').style.opacity = '1'; }, 2000);
-            } catch (err) { document.getElementById('loading-text').innerText = "HARDWARE_ERROR"; }
+                setTimeout(() => { 
+                    document.getElementById('boot-overlay').style.display = 'none'; 
+                    document.getElementById('main-ui').style.opacity = '1'; 
+                }, 2000);
+            } catch (err) { console.error(err); }
         }
 
-        function applyScanResult(data) {
-            playSound(880, 'sine', 0.1, 0.1); // Detection chirp
-            const status = document.getElementById('status-display');
-            status.innerText = data.status; 
-            status.style.color = data.color;       
-            status.style.borderColor = data.color; 
-            status.style.background = "#000";      
-            
-            document.getElementById('match-pct').innerText = data.sync;
-            document.getElementById('match-pct').style.background = data.color;
-            document.getElementById('info-p').innerHTML = data.info;
-
-            if (data.shape) {
-                isThreatActive = true;
-                document.getElementById('camera-feed').style.display = 'none';
-                document.getElementById('threat-viz').style.display = 'block';
-                document.getElementById('core').style.display = (data.shape === 'cube') ? 'block' : 'none';
-                document.getElementById('viz-cube').style.display = (data.shape === 'cube') ? 'block' : 'none';
-                document.getElementById('viz-pyramid').style.display = (data.shape === 'pyramid') ? 'block' : 'none';
-                document.getElementById('viz-intact').style.display = (data.shape === 'intact') ? 'block' : 'none';
-                document.getElementById('viz-broken').style.display = (data.shape === 'broken') ? 'block' : 'none';
-            }
-        }
+        document.getElementById('connect-btn').addEventListener('click', () => {
+            audioCtx.resume();
+            playTap(650, 0.06); 
+            document.getElementById('entry-screen').style.display = 'none';
+            document.getElementById('boot-overlay').style.display = 'flex';
+            triggerRandomFlicker();
+            startSystem();
+        });
 
         document.getElementById('reset-btn').addEventListener('click', () => {
-            playSound(150, 'triangle', 0.5, 0.2); // Purge "whoosh" sound
+            playSound(150, 'triangle', 0.5, 0.2); 
             isThreatActive = false;
-            document.getElementById('decoded-output').innerText = "DATA EXTRACTION PENDING";
             document.getElementById('camera-feed').style.display = 'block';
             document.getElementById('threat-viz').style.display = 'none';
-            
-            const status = document.getElementById('status-display');
-            status.innerText = "SYSTEM PURGED";
-            status.style.color = "var(--alert-color)";       
-            status.style.borderColor = "var(--alert-color)"; 
-
+            document.getElementById('decoded-output').innerText = "DATA EXTRACTION PENDING";
+            document.getElementById('status-display').innerText = "SYSTEM PURGED";
             document.getElementById('match-pct').innerText = "0.0% CONFIDENCE";
-            document.getElementById('match-pct').style.background = "var(--warning-color)";
-            document.getElementById('info-p').innerHTML = "Analyzing optical signatures for data extraction...";
-            
-            setTimeout(() => { 
-                status.innerText = "AWAITING OPTICAL INPUT"; 
-                status.style.background = "#000"; }, 600);
+            document.getElementById('info-p').innerText = "Analyzing optical signatures for data extraction...";
+            setTimeout(() => { document.getElementById('status-display').innerText = "AWAITING OPTICAL INPUT"; }, 1000);
         });
 
-        document.getElementById('connect-btn').addEventListener('click', () => { 
-            audioCtx.resume(); 
-            playTap(650, 0.06); // Added Poly-Tap to connect button
-            document.getElementById('entry-screen').style.display = 'none'; 
-            document.getElementById('boot-overlay').style.display = 'flex'; 
-            triggerRandomFlicker();
-            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-                DeviceOrientationEvent.requestPermission().then(initMagnetometer);
-            } else { initMagnetometer(); }
-            startSystem(); 
-        });
+        setInterval(() => {
+            let data = "";
+            for(let i=0; i<15; i++) {
+                data += "0x" + Math.floor(Math.random()*256).toString(16).toUpperCase().padStart(2, '0') + "<br>";
+            }
+            document.getElementById('hex-data-stream').innerHTML = data;
+        }, 150);
     </script>
 </body>
 </html>
