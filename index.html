@@ -159,10 +159,26 @@
 
         @keyframes core-pulse { 0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; } 50% { transform: translate(-50%, -50%) scale(2.5); opacity: 1; } }
 
-        main { flex: 1; display: flex; flex-direction: column; border-top: 1px solid rgba(0, 240, 255, 0.2); padding-top: 10px; overflow-y: auto; }
+        main { 
+            flex: 1; display: flex; flex-direction: column; 
+            border-top: 1px solid rgba(0, 240, 255, 0.2); 
+            padding-top: 10px; overflow-y: auto; 
+        }
+
         .intel-box { border: 1px solid var(--warning-color); padding: 10px; color: var(--warning-color); background: rgba(255, 204, 0, 0.05); margin-top: 10px; }
         .status-bar { background: #000; padding: 8px; margin: 10px 0; font-size: 0.8em; text-align: center; border: 1px solid var(--alert-color); color: var(--alert-color); transition: 0.3s; }
-        #reset-btn { margin-top: 10px; background: rgba(255, 51, 51, 0.1); color: var(--alert-color); border: 1px solid var(--alert-color); padding: 8px; cursor: pointer; font-family: 'Space Mono'; font-size: 0.7em; }
+        
+        #reset-btn { 
+            margin-top: auto; /* ATTACH TO BOTTOM */
+            background: rgba(255, 51, 51, 0.1); 
+            color: var(--alert-color); 
+            border: 1px solid var(--alert-color); 
+            padding: 12px; cursor: pointer; 
+            font-family: 'Space Mono'; font-size: 0.75em;
+            flex-shrink: 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
     </style>
 </head>
 <body>
@@ -230,6 +246,7 @@
             <div id="decoded-output" style="font-weight: bold; border-left: 3px solid var(--alert-color); padding-left: 10px; font-size: 0.9em; word-break: break-all;">
                 DATA EXTRACTION PENDING
             </div>
+            
             <div class="intel-box">
                 <div style="display: flex; justify-content: space-between; font-size: 0.6em; margin-bottom: 5px;">
                     <span>REPORT: AD-74.ZX</span>
@@ -237,12 +254,14 @@
                 </div>
                 <p id="info-p" style="margin: 0; font-size: 0.7em; line-height: 1.4;">Analyzing optical signatures for data extraction...</p>
             </div>
-            <button id="reset-btn" onmousedown="playTap(650, 0.06)" onmouseup="playTap(500, 0.04)">PURGE ANALYSIS // RESET INPUT</button>
+
+            <button id="reset-btn">PURGE ANALYSIS // RESET INPUT</button>
         </main>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
         import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
@@ -257,16 +276,18 @@
         };
 
         const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
         const db = getDatabase(app);
 
         const codeReader = new ZXing.BrowserMultiFormatReader();
         const hexStream = document.getElementById('hex-data-stream');
         const phoenixChars = ["\uD802\uDD00", "\uD802\uDD01", "\uD802\uDD02", "\uD802\uDD03", "\uD802\uDD04", "\uD802\uDD05", "\uD802\uDD06", "\uD802\uDD07", "\uD802\uDD08"];
         let isThreatActive = false;
+        let movementIntensity = 0;
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         
-        function playSound(freq, type, duration, volume = 0.1) {
+        window.playSound = function(freq, type, duration, volume = 0.1) {
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.type = type;
@@ -277,9 +298,9 @@
             gain.connect(audioCtx.destination);
             osc.start();
             osc.stop(audioCtx.currentTime + duration);
-        }
+        };
 
-        function playTap(freq, vol) {
+        window.playTap = function(freq, vol) {
             if (!audioCtx) return;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
@@ -291,6 +312,16 @@
             gain.connect(audioCtx.destination);
             osc.start();
             osc.stop(audioCtx.currentTime + 0.05);
+        };
+
+        function runMotionSonar() {
+            if (movementIntensity > 1.2) {
+                window.playTap(350 + (movementIntensity * 15), 0.03);
+                let nextTick = Math.max(50, 400 - (movementIntensity * 30));
+                setTimeout(runMotionSonar, nextTick);
+            } else {
+                setTimeout(runMotionSonar, 200);
+            }
         }
 
         const SCAN_LIBRARY = {
@@ -332,7 +363,7 @@
 
             ui.classList.add('instability-event');
             status.innerText = "WARNING: POWER INSTABILITY";
-            playSound(120, 'sawtooth', 0.4, 0.05);
+            window.playSound(120, 'sawtooth', 0.4, 0.05);
 
             setTimeout(() => {
                 ui.classList.remove('instability-event');
@@ -343,11 +374,31 @@
             setTimeout(triggerRandomFlicker, nextDelay);
         }
 
-        function initMagnetometer() {
+        function initSensors() {
             if (window.DeviceOrientationEvent) {
                 window.addEventListener('deviceorientation', (event) => {
                     let heading = event.webkitCompassHeading || event.alpha;
                     if (heading) magBearing.innerText = Math.floor(heading).toString().padStart(3, '0') + "°";
+                });
+            }
+
+            if ('Magnetometer' in window) {
+                try {
+                    const mag = new Magnetometer({frequency: 10});
+                    mag.addEventListener('reading', () => {
+                        const strength = Math.sqrt(mag.x**2 + mag.y**2 + mag.z**2).toFixed(2);
+                        updateMagUI(strength);
+                    });
+                    mag.start();
+                } catch (e) { console.warn("Magnetometer restricted."); }
+            }
+
+            if (window.DeviceMotionEvent) {
+                window.addEventListener('devicemotion', (event) => {
+                    const accel = event.acceleration || event.accelerationIncludingGravity;
+                    if (accel) {
+                        movementIntensity = Math.sqrt(accel.x**2 + accel.y**2);
+                    }
                 });
             }
 
@@ -382,9 +433,8 @@
                         const text = result.getText().toUpperCase();
                         document.getElementById('decoded-output').innerText = text;
 
-                        // FIREBASE TRIGGER
                         if (text === "FIXENGINESNOW") {
-                            set(ref(db, 'shipState/engine/status'), "ONLINE / STANDBY");
+                            set(ref(db, 'shipstate/engines'), "ONLINE / STANDBY");
                         }
 
                         if (SCAN_LIBRARY[text]) applyScanResult(SCAN_LIBRARY[text]);
@@ -397,7 +447,7 @@
         }
 
         function applyScanResult(data) {
-            playSound(880, 'sine', 0.1, 0.1);
+            window.playSound(880, 'sine', 0.1, 0.1);
             const status = document.getElementById('status-display');
             status.innerText = data.status; 
             status.style.color = data.color;       
@@ -420,8 +470,10 @@
             }
         }
 
+        document.getElementById('reset-btn').addEventListener('mousedown', () => window.playTap(650, 0.06));
+        document.getElementById('reset-btn').addEventListener('mouseup', () => window.playTap(500, 0.04));
         document.getElementById('reset-btn').addEventListener('click', () => {
-            playSound(150, 'triangle', 0.5, 0.2);
+            window.playSound(150, 'triangle', 0.5, 0.2);
             isThreatActive = false;
             document.getElementById('decoded-output').innerText = "DATA EXTRACTION PENDING";
             document.getElementById('camera-feed').style.display = 'block';
@@ -443,13 +495,15 @@
 
         document.getElementById('connect-btn').addEventListener('click', () => { 
             audioCtx.resume(); 
-            playTap(650, 0.06);
+            window.playTap(650, 0.06);
             document.getElementById('entry-screen').style.display = 'none'; 
             document.getElementById('boot-overlay').style.display = 'flex'; 
             triggerRandomFlicker();
+            runMotionSonar();
+
             if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-                DeviceOrientationEvent.requestPermission().then(initMagnetometer);
-            } else { initMagnetometer(); }
+                DeviceOrientationEvent.requestPermission().then(initSensors);
+            } else { initSensors(); }
             startSystem(); 
         });
     </script>
