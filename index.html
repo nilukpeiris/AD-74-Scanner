@@ -483,7 +483,7 @@
                         document.getElementById('decoded-output').innerText = text;
 
                         if (text === "FIXENGINESNOW") {
-                            set(ref(db, 'shipstate/engines/status'), "ONLINE / STANDBY");
+                            set(ref(db, 'shipState/engine/status'), "ONLINE / STANDBY");
                         }
 
                         if (SCAN_LIBRARY[text]) applyScanResult(SCAN_LIBRARY[text]);
