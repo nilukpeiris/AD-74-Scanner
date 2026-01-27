@@ -45,6 +45,23 @@
             90%  { opacity: 1; }
         }
 
+        /* NEW ENHANCED GLITCH ANIMATIONS */
+        @keyframes true-glitch {
+            0% { clip-path: inset(40% 0 61% 0); transform: translate(-5px, 2px); }
+            20% { clip-path: inset(92% 0 1% 0); transform: translate(10px, -3px); }
+            40% { clip-path: inset(43% 0 1% 0); transform: translate(-10px, 3px); }
+            60% { clip-path: inset(25% 0 58% 0); transform: translate(5px, 1px); }
+            80% { clip-path: inset(54% 0 7% 0); transform: translate(-2px, -4px); }
+            100% { clip-path: inset(58% 0 43% 0); transform: translate(0); }
+        }
+
+        .rgb-split { text-shadow: 2px 0 #ff0000, -2px 0 #00ff00; }
+
+        .system-critical {
+            animation: true-glitch 0.2s infinite;
+            filter: saturate(5) contrast(2) brightness(1.5);
+        }
+
         .glitch-active { animation: hud-shudder 0.15s infinite; border-color: var(--alert-color) !important; }
         .feed-glitch { filter: sepia(1) hue-rotate(0deg) saturate(8) contrast(2) !important; }
         .instability-event { animation: power-flicker 0.4s ease-out; }
@@ -85,6 +102,18 @@
             flex: 1; border: 1px solid rgba(0, 240, 255, 0.2);
             background: #000; margin: 10px 0; position: relative;
             overflow: hidden; display: flex; justify-content: center; align-items: center;
+        }
+
+        /* SCANLINE EFFECT */
+        .component-viz::after {
+            content: " ";
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 4px, 3px 100%;
+            pointer-events: none;
+            z-index: 15;
         }
 
         #camera-feed {
@@ -356,21 +385,33 @@
             }
         }
 
+        /* ENHANCED FLICKER LOGIC */
         function triggerRandomFlicker() {
             const ui = document.getElementById('main-ui');
             const status = document.getElementById('status-display');
             const prevStatus = status.innerText;
 
-            ui.classList.add('instability-event');
-            status.innerText = "WARNING: POWER INSTABILITY";
-            window.playSound(120, 'sawtooth', 0.4, 0.05);
+            ui.classList.add('system-critical');
+            status.classList.add('rgb-split');
+            status.innerText = "!! CRITICAL ERR: CORRUPT_BUFFER !!";
+            
+            window.playSound(60, 'sawtooth', 0.2, 0.1); 
+            window.playSound(40, 'square', 0.4, 0.05);
 
             setTimeout(() => {
-                ui.classList.remove('instability-event');
+                ui.classList.remove('system-critical');
+                status.classList.remove('rgb-split');
                 if (!isThreatActive) status.innerText = prevStatus;
-            }, 700);
+                
+                if(Math.random() > 0.5) {
+                    setTimeout(() => {
+                         ui.classList.add('glitch-active');
+                         setTimeout(() => ui.classList.remove('glitch-active'), 50);
+                    }, 100);
+                }
+            }, 400);
 
-            const nextDelay = Math.floor(Math.random() * (30000 - 10000 + 1)) + 10000;
+            const nextDelay = Math.random() * 15000 + 5000;
             setTimeout(triggerRandomFlicker, nextDelay);
         }
 
@@ -398,6 +439,13 @@
                     const accel = event.acceleration || event.accelerationIncludingGravity;
                     if (accel) {
                         movementIntensity = Math.sqrt(accel.x**2 + accel.y**2);
+                        
+                        /* IMPACT-BASED GLITCH */
+                        if (movementIntensity > 25) { 
+                            uiContainer.classList.add('system-critical');
+                            window.playSound(100, 'brown', 0.2, 0.1); 
+                            setTimeout(() => uiContainer.classList.remove('system-critical'), 200);
+                        }
                     }
                 });
             }
