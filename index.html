@@ -203,103 +203,156 @@
     </div>
 
     <script>
-        const codeReader = new ZXing.BrowserMultiFormatReader();
-        const hexStream = document.getElementById('hex-data-stream');
-        const phoenixChars = ["\uD802\uDD00", "\uD802\uDD01", "\uD802\uDD02", "\uD802\uDD03", "\uD802\uDD04", "\uD802\uDD05", "\uD802\uDD06", "\uD802\uDD07", "\uD802\uDD08"];
-        let isThreatActive = false;
+    const codeReader = new ZXing.BrowserMultiFormatReader();
+    const hexStream = document.getElementById('hex-data-stream');
+    const phoenixChars = ["\uD802\uDD00", "\uD802\uDD01", "\uD802\uDD02", "\uD802\uDD03", "\uD802\uDD04", "\uD802\uDD05", "\uD802\uDD06", "\uD802\uDD07", "\uD802\uDD08"];
+    let isThreatActive = false;
 
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    function playSound(freq, type, duration, volume = 0.1) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+    }
+
+    function playTap(freq, vol) {
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.05);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.05);
+    }
+
+    function triggerRandomFlicker() {
+        const ui = document.getElementById('main-ui');
+        const status = document.getElementById('status-display');
+        const prevStatus = status.innerText;
+
+        ui.classList.add('instability-event');
+        status.innerText = "WARNING: POWER INSTABILITY";
+        playSound(120, 'sawtooth', 0.4, 0.05);
+
+        setTimeout(() => {
+            ui.classList.remove('instability-event');
+            if (!isThreatActive) status.innerText = prevStatus;
+        }, 700);
+
+        const nextDelay = Math.floor(Math.random() * (30000 - 10000 + 1)) + 10000;
+        setTimeout(triggerRandomFlicker, nextDelay);
+    }
+
+    const SCAN_LIBRARY = {
+        "EXPLOSIVES DETECTED": { status: "CRITICAL THREAT DETECTED", color: "var(--alert-color)", info: "<strong>PROTOCOL AD-74:</strong> Class-4 controlled molecular shearing markers...", shape: "cube", sync: "89%" },
+        "BIOHAZARD": { status: "PATHOGEN DETECTED", color: "var(--alert-color)", info: "<strong>SENSORS ACTIVE:</strong> Airborne biological agent identified...", shape: "pyramid", sync: "82%" }
+    };
+
+    // --- NEW: Camera Start & Scan Logic ---
+    async function startScanning() {
+        try {
+            const videoDevices = await codeReader.listVideoInputDevices();
+            const selectedDevice = videoDevices[0].deviceId; // Selects first available camera
+
+            codeReader.decodeFromVideoDevice(selectedDevice, 'camera-feed', (result, err) => {
+                if (result && !isThreatActive) {
+                    const text = result.getText().toUpperCase();
+                    document.getElementById('decoded-output').innerText = text;
+                    if (SCAN_LIBRARY[text]) applyScanResult(SCAN_LIBRARY[text]);
+                }
+            });
+        } catch (err) {
+            console.error("Camera Error:", err);
+            document.getElementById('loading-text').innerText = "CAMERA ERROR";
+        }
+    }
+
+    function applyScanResult(data) {
+        isThreatActive = true;
+        playSound(880, 'sine', 0.1, 0.1);
+        const status = document.getElementById('status-display');
+        status.innerText = data.status;
+        status.style.color = data.color;
+        status.style.borderColor = data.color;
         
-        function playSound(freq, type, duration, volume = 0.1) {
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = type;
-            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            gain.gain.setValueAtTime(volume, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + duration);
+        document.getElementById('match-pct').innerText = data.sync + " CONFIDENCE";
+        document.getElementById('info-p').innerHTML = data.info;
+
+        document.getElementById('camera-feed').style.display = 'none';
+        document.getElementById('threat-viz').style.display = 'block';
+        document.getElementById('viz-' + data.shape).style.display = 'block';
+    }
+
+    function updateMagUI(strength) {
+        const magUT = document.getElementById('mag-uT');
+        const magBar = document.getElementById('mag-bar');
+        magUT.innerText = strength + " uT";
+        const percent = Math.min((strength / 100) * 100, 100);
+        magBar.style.width = percent + "%";
+
+        if (strength > 80) {
+            document.getElementById('main-ui').classList.add('glitch-active');
+            document.getElementById('camera-feed').classList.add('feed-glitch');
+        } else {
+            document.getElementById('main-ui').classList.remove('glitch-active');
+            document.getElementById('camera-feed').classList.remove('feed-glitch');
         }
+    }
 
-        function playTap(freq, vol) {
-            if (!audioCtx) return;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.05);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.05);
+    function initMagnetometer() {
+        if ('Magnetometer' in window) {
+            const mag = new Magnetometer({frequency: 10});
+            mag.addEventListener('reading', () => {
+                const strength = Math.sqrt(mag.x**2 + mag.y**2 + mag.z**2).toFixed(2);
+                updateMagUI(strength);
+            });
+            mag.start();
+        } else {
+            setInterval(() => updateMagUI((Math.random() * 40 + 20).toFixed(2)), 200);
         }
+    }
 
-        // --- NEW ISOLATED GLITCH MECHANISM ---
-        function triggerRandomFlicker() {
-            const ui = document.getElementById('main-ui');
-            const status = document.getElementById('status-display');
-            const prevStatus = status.innerText;
+    // Reset logic
+    document.getElementById('reset-btn').addEventListener('click', () => {
+        isThreatActive = false;
+        document.getElementById('camera-feed').style.display = 'block';
+        document.getElementById('threat-viz').style.display = 'none';
+        document.getElementById('decoded-output').innerText = "DATA EXTRACTION PENDING";
+        const status = document.getElementById('status-display');
+        status.innerText = "AWAITING OPTICAL INPUT";
+        status.style.color = "var(--alert-color)";
+        status.style.borderColor = "var(--alert-color)";
+        // Hide all shapes
+        document.querySelectorAll('.cube, .pyramid, .hull-intact, .hull-broken').forEach(s => s.style.display = 'none');
+    });
 
-            ui.classList.add('instability-event');
-            status.innerText = "WARNING: POWER INSTABILITY";
-            playSound(120, 'sawtooth', 0.4, 0.05); // Buzzing sound isolated
+    document.getElementById('connect-btn').addEventListener('click', () => { 
+        audioCtx.resume(); 
+        playTap(650, 0.06);
+        document.getElementById('entry-screen').style.display = 'none'; 
+        document.getElementById('boot-overlay').style.display = 'flex'; 
+        
+        triggerRandomFlicker(); 
+        initMagnetometer();
+        startScanning(); // Now explicitly called
 
-            setTimeout(() => {
-                ui.classList.remove('instability-event');
-                if (!isThreatActive) status.innerText = prevStatus;
-            }, 700);
-
-            // Updated random frequency: 10-30 seconds
-            const nextDelay = Math.floor(Math.random() * (30000 - 10000 + 1)) + 10000;
-            setTimeout(triggerRandomFlicker, nextDelay);
-        }
-
-        const SCAN_LIBRARY = {
-            "EXPLOSIVES DETECTED": { status: "CRITICAL THREAT DETECTED", color: "var(--alert-color)", info: "<strong>PROTOCOL AD-74:</strong> Class-4 controlled molecular shearing markers...", shape: "cube", sync: "89%" },
-            "BIOHAZARD": { status: "PATHOGEN DETECTED", color: "var(--alert-color)", info: "<strong>SENSORS ACTIVE:</strong> Airborne biological agent identified...", shape: "pyramid", sync: "82%" }
-        };
-
-        function updateMagUI(strength) {
-            const magUT = document.getElementById('mag-uT');
-            const magBar = document.getElementById('mag-bar');
-            magUT.innerText = strength + " uT";
-            const percent = Math.min((strength / 100) * 100, 100);
-            magBar.style.width = percent + "%";
-
-            if (strength > 80) {
-                document.getElementById('main-ui').classList.add('glitch-active');
-                document.getElementById('camera-feed').classList.add('feed-glitch');
-            } else {
-                document.getElementById('main-ui').classList.remove('glitch-active');
-                document.getElementById('camera-feed').classList.remove('feed-glitch');
-            }
-        }
-
-        function initMagnetometer() {
-            if ('Magnetometer' in window) {
-                const mag = new Magnetometer({frequency: 10});
-                mag.addEventListener('reading', () => {
-                    const strength = Math.sqrt(mag.x**2 + mag.y**2 + mag.z**2).toFixed(2);
-                    updateMagUI(strength);
-                });
-                mag.start();
-            } else {
-                setInterval(() => updateMagUI((Math.random() * 40 + 20).toFixed(2)), 200);
-            }
-        }
-
-        document.getElementById('connect-btn').addEventListener('click', () => { 
-            audioCtx.resume(); 
-            playTap(650, 0.06);
-            document.getElementById('entry-screen').style.display = 'none'; 
-            document.getElementById('boot-overlay').style.display = 'flex'; 
-            triggerRandomFlicker(); // Start the new glitch loop
-            initMagnetometer();
-            setTimeout(() => { document.getElementById('boot-overlay').style.display = 'none'; document.getElementById('main-ui').style.opacity = '1'; }, 2000);
-        });
-    </script>
+        setTimeout(() => { 
+            document.getElementById('boot-overlay').style.display = 'none'; 
+            document.getElementById('main-ui').style.opacity = '1'; 
+        }, 2000);
+    });
+</script>
 </body>
 </html>
