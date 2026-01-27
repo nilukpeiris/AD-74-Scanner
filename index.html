@@ -45,7 +45,7 @@
             90%  { opacity: 1; }
         }
 
-        /* NEW ENHANCED GLITCH ANIMATIONS */
+        /* ENHANCED GLITCH ANIMATIONS */
         @keyframes true-glitch {
             0% { clip-path: inset(40% 0 61% 0); transform: translate(-5px, 2px); }
             20% { clip-path: inset(92% 0 1% 0); transform: translate(10px, -3px); }
@@ -478,7 +478,8 @@
                 const selectedDevice = videoDevices[0].deviceId;
                 codeReader.decodeFromVideoDevice(selectedDevice, 'camera-feed', (result) => {
                     if (result && !isThreatActive) {
-                        const text = result.getText().toUpperCase();
+                        // FIX: TRIM WHITESPACE TO ENSURE KEY MATCH
+                        const text = result.getText().toUpperCase().trim();
                         document.getElementById('decoded-output').innerText = text;
 
                         if (text === "FIXENGINESNOW") {
