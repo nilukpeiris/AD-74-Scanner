@@ -384,7 +384,7 @@
 
                         // FIREBASE TRIGGER
                         if (text === "FIXENGINESNOW") {
-                            set(ref(db, 'shipState/engine'), "ONLINE / STANDBY");
+                            set(ref(db, 'shipState/engine/status'), "ONLINE / STANDBY");
                         }
 
                         if (SCAN_LIBRARY[text]) applyScanResult(SCAN_LIBRARY[text]);
