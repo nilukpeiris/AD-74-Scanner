@@ -326,13 +326,7 @@
 
         const SCAN_LIBRARY = {
             "FIXENGINESNOW": { status: "ENGINE REPAIR SEQUENCE INITIALIZED", color: "var(--primary-color)", info: "<strong>REMOTE UPLINK:</strong> Command received. Engines set to ONLINE / STANDBY.", shape: null, sync: "SYNC // 100%" },
-            "FIXHULLNOW": { 
-        status: "HULL INTEGRITY REPAIR INITIALIZED", 
-        color: "var(--primary-color)", 
-        info: "<strong>REMOTE UPLINK:</strong> Nanite stabilizers deployed. Patching structural fractures.", 
-        shape: "intact", // Displays the intact hull 3D model
-        sync: "SYNC // 100%" 
-    }
+            "FIXHULLNOW": { status: "HULL INTEGRITY REPAIR INITIALIZED", color: "var(--primary-color)", info: "<strong>REMOTE UPLINK:</strong> Nanite stabilizers deployed. Patching structural fractures.", shape: "intact", sync: "SYNC // 100%" }
             "EXPLOSIVES DETECTED": { status: "CRITICAL THREAT DETECTED", color: "var(--alert-color)", info: "<strong>PROTOCOL AD-74:</strong> Class-4 controlled molecular shearing markers. Nano-particulate Accelerant [IS-109]. detected.", shape: "cube", sync: "CONFIDENCE // 89%" },
             "BIOHAZARD": { status: "PATHOGEN DETECTED", color: "var(--alert-color)", info: "<strong>SENSORS ACTIVE:</strong> Airborne biological agent identified. Seal localized vents.", shape: "pyramid", sync: "SYNC // 82%" },
             "INTACT HULL SEGMENT": { status: "STRUCTURAL SCAN: NOMINAL", color: "var(--alert-color)", info: "<strong>INTEGRITY:</strong> 100%. No stress fractures or surface damage detected.", shape: "intact", sync: "CONFIDENCE // 100%" },
@@ -444,8 +438,8 @@
                             set(ref(db, 'shipState/engine/status'), "ONLINE / STANDBY");
                         }
                         if (text === "FIXHULLNOW") {
-                    set(ref(db, 'shipState/hull/status'), "NOMINAL (SEALED)");
-                }
+                            set(ref(db, 'shipState/hull/status'), "NOMINAL (SEALED)");
+                        }
 
                         if (SCAN_LIBRARY[text]) applyScanResult(SCAN_LIBRARY[text]);
                     }
