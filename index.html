@@ -45,33 +45,6 @@
             90%  { opacity: 1; }
         }
 
-        /* ENHANCED GLITCH ANIMATIONS */
-        @keyframes true-glitch {
-            0% { clip-path: inset(40% 0 61% 0); transform: translate(-5px, 2px); }
-            20% { clip-path: inset(92% 0 1% 0); transform: translate(10px, -3px); }
-            40% { clip-path: inset(43% 0 1% 0); transform: translate(-10px, 3px); }
-            60% { clip-path: inset(25% 0 58% 0); transform: translate(5px, 1px); }
-            80% { clip-path: inset(54% 0 7% 0); transform: translate(-2px, -4px); }
-            100% { clip-path: inset(58% 0 43% 0); transform: translate(0); }
-        }
-
-        @keyframes repair-pulse {
-    0% { filter: drop-shadow(0 0 2px var(--primary-color)); opacity: 0.6; }
-    50% { filter: drop-shadow(0 0 15px #fff); opacity: 1; }
-    100% { filter: drop-shadow(0 0 2px var(--primary-color)); opacity: 0.6; }
-}
-
-.repairing-active {
-    animation: repair-pulse 0.5s infinite alternate !important;
-}
-
-        .rgb-split { text-shadow: 2px 0 #ff0000, -2px 0 #00ff00; }
-
-        .system-critical {
-            animation: true-glitch 0.2s infinite;
-            filter: saturate(5) contrast(2) brightness(1.5);
-        }
-
         .glitch-active { animation: hud-shudder 0.15s infinite; border-color: var(--alert-color) !important; }
         .feed-glitch { filter: sepia(1) hue-rotate(0deg) saturate(8) contrast(2) !important; }
         .instability-event { animation: power-flicker 0.4s ease-out; }
@@ -112,18 +85,6 @@
             flex: 1; border: 1px solid rgba(0, 240, 255, 0.2);
             background: #000; margin: 10px 0; position: relative;
             overflow: hidden; display: flex; justify-content: center; align-items: center;
-        }
-
-        /* SCANLINE EFFECT */
-        .component-viz::after {
-            content: " ";
-            position: absolute;
-            top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
-                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            background-size: 100% 4px, 3px 100%;
-            pointer-events: none;
-            z-index: 15;
         }
 
         #camera-feed {
@@ -324,7 +285,6 @@
         let isThreatActive = false;
         let movementIntensity = 0;
 
-        // --- Audio Helpers ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         
         window.playSound = function(freq, type, duration, volume = 0.1) {
@@ -366,7 +326,6 @@
 
         const SCAN_LIBRARY = {
             "FIXENGINESNOW": { status: "ENGINE REPAIR SEQUENCE INITIALIZED", color: "var(--primary-color)", info: "<strong>REMOTE UPLINK:</strong> Command received. Engines set to ONLINE / STANDBY.", shape: null, sync: "SYNC // 100%" },
-            "FIXHULLNOW": { status: "HULL INTEGRITY REPAIR INITIALIZED", color: "var(--primary-color)", info: "<strong>REMOTE UPLINK:</strong> Nanite stabilizers deployed. Patching structural fractures.", shape: "intact", sync: "SYNC // 100%" },
             "EXPLOSIVES DETECTED": { status: "CRITICAL THREAT DETECTED", color: "var(--alert-color)", info: "<strong>PROTOCOL AD-74:</strong> Class-4 controlled molecular shearing markers. Nano-particulate Accelerant [IS-109]. detected.", shape: "cube", sync: "CONFIDENCE // 89%" },
             "BIOHAZARD": { status: "PATHOGEN DETECTED", color: "var(--alert-color)", info: "<strong>SENSORS ACTIVE:</strong> Airborne biological agent identified. Seal localized vents.", shape: "pyramid", sync: "SYNC // 82%" },
             "INTACT HULL SEGMENT": { status: "STRUCTURAL SCAN: NOMINAL", color: "var(--alert-color)", info: "<strong>INTEGRITY:</strong> 100%. No stress fractures or surface damage detected.", shape: "intact", sync: "CONFIDENCE // 100%" },
@@ -402,27 +361,16 @@
             const status = document.getElementById('status-display');
             const prevStatus = status.innerText;
 
-            ui.classList.add('system-critical');
-            status.classList.add('rgb-split');
-            status.innerText = "!! CRITICAL ERR: CORRUPT_BUFFER !!";
-            
-            window.playSound(60, 'sawtooth', 0.2, 0.1); 
-            window.playSound(40, 'square', 0.4, 0.05);
+            ui.classList.add('instability-event');
+            status.innerText = "WARNING: POWER INSTABILITY";
+            window.playSound(120, 'sawtooth', 0.4, 0.05);
 
             setTimeout(() => {
-                ui.classList.remove('system-critical');
-                status.classList.remove('rgb-split');
+                ui.classList.remove('instability-event');
                 if (!isThreatActive) status.innerText = prevStatus;
-                
-                if(Math.random() > 0.5) {
-                    setTimeout(() => {
-                         ui.classList.add('glitch-active');
-                         setTimeout(() => ui.classList.remove('glitch-active'), 50);
-                    }, 100);
-                }
-            }, 400);
+            }, 700);
 
-            const nextDelay = Math.random() * 15000 + 5000;
+            const nextDelay = Math.floor(Math.random() * (30000 - 10000 + 1)) + 10000;
             setTimeout(triggerRandomFlicker, nextDelay);
         }
 
@@ -450,11 +398,6 @@
                     const accel = event.acceleration || event.accelerationIncludingGravity;
                     if (accel) {
                         movementIntensity = Math.sqrt(accel.x**2 + accel.y**2);
-                        if (movementIntensity > 25) { 
-                            uiContainer.classList.add('system-critical');
-                            window.playSound(100, 'brown', 0.2, 0.1); 
-                            setTimeout(() => uiContainer.classList.remove('system-critical'), 200);
-                        }
                     }
                 });
             }
@@ -487,16 +430,11 @@
                 const selectedDevice = videoDevices[0].deviceId;
                 codeReader.decodeFromVideoDevice(selectedDevice, 'camera-feed', (result) => {
                     if (result && !isThreatActive) {
-                        // FIX: TRIM WHITESPACE TO ENSURE KEY MATCH
-                        const text = result.getText().toUpperCase().trim();
+                        const text = result.getText().toUpperCase();
                         document.getElementById('decoded-output').innerText = text;
 
-                        // Unified shipstate path
                         if (text === "FIXENGINESNOW") {
-                            set(ref(db, 'shipstate/engine/status'), "ONLINE / STANDBY");
-                        }
-                        if (text === "FIXHULLNOW") {
-                            set(ref(db, 'shipstate/hull/status'), "NOMINAL (SEALED)");
+                            set(ref(db, 'shipstate/engines'), "ONLINE / STANDBY");
                         }
 
                         if (SCAN_LIBRARY[text]) applyScanResult(SCAN_LIBRARY[text]);
@@ -511,8 +449,6 @@
         function applyScanResult(data) {
             window.playSound(880, 'sine', 0.1, 0.1);
             const status = document.getElementById('status-display');
-            const threatViz = document.getElementById('threat-viz'); // FIXED: Define threatViz
-            
             status.innerText = data.status; 
             status.style.color = data.color;       
             status.style.borderColor = data.color; 
@@ -522,17 +458,10 @@
             document.getElementById('match-pct').style.background = data.color;
             document.getElementById('info-p').innerHTML = data.info;
 
-            // Trigger repair animation
-            if (data.status.includes("REPAIR") || data.status.includes("INITIALIZED")) {
-                threatViz.classList.add('repairing-active');
-            } else {
-                threatViz.classList.remove('repairing-active');
-            }
-
             if (data.shape) {
                 isThreatActive = true;
                 document.getElementById('camera-feed').style.display = 'none';
-                threatViz.style.display = 'block';
+                document.getElementById('threat-viz').style.display = 'block';
                 document.getElementById('core').style.display = (data.shape === 'cube') ? 'block' : 'none';
                 document.getElementById('viz-cube').style.display = (data.shape === 'cube') ? 'block' : 'none';
                 document.getElementById('viz-pyramid').style.display = (data.shape === 'pyramid') ? 'block' : 'none';
@@ -546,14 +475,10 @@
         document.getElementById('reset-btn').addEventListener('click', () => {
             window.playSound(150, 'triangle', 0.5, 0.2);
             isThreatActive = false;
-            
-            // FIXED: Remove repair animation on purge
-            document.getElementById('threat-viz').classList.remove('repairing-active');
-            
             document.getElementById('decoded-output').innerText = "DATA EXTRACTION PENDING";
             document.getElementById('camera-feed').style.display = 'block';
             document.getElementById('threat-viz').style.display = 'none';
-
+            
             const status = document.getElementById('status-display');
             status.innerText = "SYSTEM PURGED";
             status.style.color = "var(--alert-color)";       
