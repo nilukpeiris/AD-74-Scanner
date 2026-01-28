@@ -55,6 +55,16 @@
             100% { clip-path: inset(58% 0 43% 0); transform: translate(0); }
         }
 
+        @keyframes repair-pulse {
+    0% { filter: drop-shadow(0 0 2px var(--primary-color)); opacity: 0.6; }
+    50% { filter: drop-shadow(0 0 15px #fff); opacity: 1; }
+    100% { filter: drop-shadow(0 0 2px var(--primary-color)); opacity: 0.6; }
+}
+
+.repairing-active {
+    animation: repair-pulse 0.5s infinite alternate !important;
+}
+
         .rgb-split { text-shadow: 2px 0 #ff0000, -2px 0 #00ff00; }
 
         .system-critical {
@@ -355,6 +365,7 @@
 
         const SCAN_LIBRARY = {
             "FIXENGINESNOW": { status: "ENGINE REPAIR SEQUENCE INITIALIZED", color: "var(--primary-color)", info: "<strong>REMOTE UPLINK:</strong> Command received. Engines set to ONLINE / STANDBY.", shape: null, sync: "SYNC // 100%" },
+            "FIXHULLNOW": { status: "HULL INTEGRITY REPAIR INITIALIZED", color: "var(--primary-color)", info: "<strong>REMOTE UPLINK:</strong> Nanite stabilizers deployed. Patching structural fractures.", shape: "intact", sync: "SYNC // 100%" },
             "EXPLOSIVES DETECTED": { status: "CRITICAL THREAT DETECTED", color: "var(--alert-color)", info: "<strong>PROTOCOL AD-74:</strong> Class-4 controlled molecular shearing markers. Nano-particulate Accelerant [IS-109]. detected.", shape: "cube", sync: "CONFIDENCE // 89%" },
             "BIOHAZARD": { status: "PATHOGEN DETECTED", color: "var(--alert-color)", info: "<strong>SENSORS ACTIVE:</strong> Airborne biological agent identified. Seal localized vents.", shape: "pyramid", sync: "SYNC // 82%" },
             "INTACT HULL SEGMENT": { status: "STRUCTURAL SCAN: NOMINAL", color: "var(--alert-color)", info: "<strong>INTEGRITY:</strong> 100%. No stress fractures or surface damage detected.", shape: "intact", sync: "CONFIDENCE // 100%" },
@@ -485,6 +496,9 @@
                         if (text === "FIXENGINESNOW") {
                             set(ref(db, 'shipState/engine/status'), "ONLINE / STANDBY");
                         }
+                        if (text === "FIXHULLNOW") {
+                    set(ref(db, 'shipstate/hull/status'), "NOMINAL (SEALED)");
+                        }
 
                         if (SCAN_LIBRARY[text]) applyScanResult(SCAN_LIBRARY[text]);
                     }
@@ -507,6 +521,12 @@
             document.getElementById('match-pct').style.background = data.color;
             document.getElementById('info-p').innerHTML = data.info;
 
+            if (data.status.includes("REPAIR") || data.status.includes("INITIALIZED")) {
+        threatViz.classList.add('repairing-active');
+    } else {
+        threatViz.classList.remove('repairing-active');
+    }
+
             if (data.shape) {
                 isThreatActive = true;
                 document.getElementById('camera-feed').style.display = 'none';
@@ -527,6 +547,8 @@
             document.getElementById('decoded-output').innerText = "DATA EXTRACTION PENDING";
             document.getElementById('camera-feed').style.display = 'block';
             document.getElementById('threat-viz').style.display = 'none';
+            document.getElementById('threat-viz').classList.remove('repairing-active');
+
             
             const status = document.getElementById('status-display');
             status.innerText = "SYSTEM PURGED";
