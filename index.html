@@ -324,6 +324,7 @@
         let isThreatActive = false;
         let movementIntensity = 0;
 
+        // --- Audio Helpers ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         
         window.playSound = function(freq, type, duration, volume = 0.1) {
@@ -396,7 +397,6 @@
             }
         }
 
-        /* ENHANCED FLICKER LOGIC */
         function triggerRandomFlicker() {
             const ui = document.getElementById('main-ui');
             const status = document.getElementById('status-display');
@@ -450,8 +450,6 @@
                     const accel = event.acceleration || event.accelerationIncludingGravity;
                     if (accel) {
                         movementIntensity = Math.sqrt(accel.x**2 + accel.y**2);
-                        
-                        /* IMPACT-BASED GLITCH */
                         if (movementIntensity > 25) { 
                             uiContainer.classList.add('system-critical');
                             window.playSound(100, 'brown', 0.2, 0.1); 
@@ -493,11 +491,12 @@
                         const text = result.getText().toUpperCase().trim();
                         document.getElementById('decoded-output').innerText = text;
 
+                        // Unified shipstate path
                         if (text === "FIXENGINESNOW") {
-                            set(ref(db, 'shipState/engine/status'), "ONLINE / STANDBY");
+                            set(ref(db, 'shipstate/engine/status'), "ONLINE / STANDBY");
                         }
                         if (text === "FIXHULLNOW") {
-                    set(ref(db, 'shipstate/hull/status'), "NOMINAL (SEALED)");
+                            set(ref(db, 'shipstate/hull/status'), "NOMINAL (SEALED)");
                         }
 
                         if (SCAN_LIBRARY[text]) applyScanResult(SCAN_LIBRARY[text]);
@@ -512,6 +511,8 @@
         function applyScanResult(data) {
             window.playSound(880, 'sine', 0.1, 0.1);
             const status = document.getElementById('status-display');
+            const threatViz = document.getElementById('threat-viz'); // FIXED: Define threatViz
+            
             status.innerText = data.status; 
             status.style.color = data.color;       
             status.style.borderColor = data.color; 
@@ -521,16 +522,17 @@
             document.getElementById('match-pct').style.background = data.color;
             document.getElementById('info-p').innerHTML = data.info;
 
+            // Trigger repair animation
             if (data.status.includes("REPAIR") || data.status.includes("INITIALIZED")) {
-        threatViz.classList.add('repairing-active');
-    } else {
-        threatViz.classList.remove('repairing-active');
-    }
+                threatViz.classList.add('repairing-active');
+            } else {
+                threatViz.classList.remove('repairing-active');
+            }
 
             if (data.shape) {
                 isThreatActive = true;
                 document.getElementById('camera-feed').style.display = 'none';
-                document.getElementById('threat-viz').style.display = 'block';
+                threatViz.style.display = 'block';
                 document.getElementById('core').style.display = (data.shape === 'cube') ? 'block' : 'none';
                 document.getElementById('viz-cube').style.display = (data.shape === 'cube') ? 'block' : 'none';
                 document.getElementById('viz-pyramid').style.display = (data.shape === 'pyramid') ? 'block' : 'none';
@@ -544,11 +546,14 @@
         document.getElementById('reset-btn').addEventListener('click', () => {
             window.playSound(150, 'triangle', 0.5, 0.2);
             isThreatActive = false;
+            
+            // FIXED: Remove repair animation on purge
+            document.getElementById('threat-viz').classList.remove('repairing-active');
+            
             document.getElementById('decoded-output').innerText = "DATA EXTRACTION PENDING";
             document.getElementById('camera-feed').style.display = 'block';
             document.getElementById('threat-viz').style.display = 'none';
 
-            
             const status = document.getElementById('status-display');
             status.innerText = "SYSTEM PURGED";
             status.style.color = "var(--alert-color)";       
