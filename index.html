@@ -173,7 +173,7 @@
             background: rgba(255, 51, 51, 0.1); 
             color: var(--alert-color); 
             border: 1px solid var(--alert-color); 
-            padding: 12px; cursor: pointer; 
+            padding: 122x; cursor: pointer; 
             font-family: 'Space Mono'; font-size: 0.75em;
             flex-shrink: 0;
             width: 100%;
@@ -383,17 +383,6 @@
                 });
             }
 
-            if ('Magnetometer' in window) {
-                try {
-                    const mag = new Magnetometer({frequency: 10});
-                    mag.addEventListener('reading', () => {
-                        const strength = Math.sqrt(mag.x**2 + mag.y**2 + mag.z**2).toFixed(2);
-                        updateMagUI(strength);
-                    });
-                    mag.start();
-                } catch (e) { console.warn("Magnetometer restricted."); }
-            }
-
             if (window.DeviceMotionEvent) {
                 window.addEventListener('devicemotion', (event) => {
                     const accel = event.acceleration || event.accelerationIncludingGravity;
@@ -403,12 +392,10 @@
                 });
             }
 
+            // SIMULATION LOOP FOR EMF UI
             setInterval(() => {
-                const currentVal = parseFloat(magUT.innerText);
-                if (currentVal < 80 || magUT.innerText === "0.00 uT") {
-                    const randomStrength = (Math.random() * (60 - 40) + 25).toFixed(2);
-                    updateMagUI(randomStrength);
-                }
+                const randomStrength = (Math.random() * (60 - 40) + 25).toFixed(2);
+                updateMagUI(randomStrength);
             }, 200);
         }
 
@@ -454,9 +441,9 @@
             window.playSound(880, 'sine', 0.1, 0.1);
             const status = document.getElementById('status-display');
             status.innerText = data.status; 
-            status.style.color = data.color;       
+            status.style.color = data.color;        
             status.style.borderColor = data.color; 
-            status.style.background = "#000";      
+            status.style.background = "#000";       
             
             document.getElementById('match-pct').innerText = data.sync;
             document.getElementById('match-pct').style.background = data.color;
