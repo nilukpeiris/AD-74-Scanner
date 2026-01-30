@@ -25,13 +25,14 @@
             display: flex; flex-direction: column;
         }
 
-        /* --- GLITCH & FLICKER ANIMATIONS --- */
-        @keyframes hud-shudder {
-            0% { transform: translate(0,0); filter: hue-rotate(0deg); }
-            25% { transform: translate(-2px, 1px); filter: hue-rotate(90deg) contrast(1.5); }
-            50% { transform: translate(2px, -1px); opacity: 0.8; }
-            75% { transform: translate(-1px, -1px); filter: invert(0.1); }
-            100% { transform: translate(0,0); }
+        /* --- HEAVY GLITCH ANIMATIONS --- */
+        @keyframes kernel-shred {
+            0% { clip-path: inset(10% 0 30% 0); transform: translateX(-10px); filter: invert(0); }
+            20% { clip-path: inset(50% 0 10% 0); transform: translateX(10px); filter: invert(1); }
+            40% { clip-path: inset(20% 0 60% 0); transform: scale(1.1); filter: contrast(3); }
+            60% { clip-path: inset(80% 0 5% 0); transform: translateX(-20px); }
+            80% { clip-path: inset(0 0 70% 0); transform: translateY(10px); filter: hue-rotate(180deg); }
+            100% { clip-path: inset(0 0 0 0); transform: translateX(0); filter: invert(0); }
         }
 
         @keyframes power-flicker {
@@ -45,8 +46,16 @@
             90%  { opacity: 1; }
         }
 
-        .glitch-active { animation: hud-shudder 0.15s infinite; border-color: var(--alert-color) !important; }
-        .feed-glitch { filter: sepia(1) hue-rotate(0deg) saturate(8) contrast(2) !important; }
+        .heavy-glitch-active { 
+            animation: kernel-shred 0.15s infinite; 
+            border: 4px solid #fff !important; 
+        }
+
+        .feed-shredded { 
+            filter: brightness(2) contrast(5) grayscale(1) !important; 
+            transform: scale(1.4) rotate(2deg); 
+        }
+
         .instability-event { animation: power-flicker 0.4s ease-out; }
 
         /* --- SCREENS --- */
@@ -352,43 +361,40 @@
             magUT.innerText = strength + " uT";
             const percent = Math.min((strength / 100) * 100, 100);
             magBar.style.width = percent + "%";
-
             magBar.style.background = (strength > 80) ? 'var(--alert-color)' : 'var(--primary-color)';
-}
+        }
 
-function triggerRandomFlicker() {
-    const ui = document.getElementById('main-ui');
-    const status = document.getElementById('status-display');
-    const feed = document.getElementById('camera-feed');
-    const prevStatus = status.innerText;
+        function triggerRandomFlicker() {
+            const ui = document.getElementById('main-ui');
+            const status = document.getElementById('status-display');
+            const feed = document.getElementById('camera-feed');
+            const prevStatus = status.innerText;
 
-    // Trigger all glitch effects: shudder, flicker, and camera distortion
-    ui.classList.add('instability-event', 'glitch-active');
-    feed.classList.add('feed-glitch');
-    
-    status.innerText = "WARNING: SYSTEM INSTABILITY";
-    window.playSound(120, 'sawtooth', 0.4, 0.05);
+            ui.classList.add('heavy-glitch-active');
+            feed.classList.add('feed-shredded');
+            status.innerText = "CRITICAL_KERNEL_ERROR";
+            status.style.background = "#fff";
+            status.style.color = "#000";
 
-    // Duration of the glitch event (700ms)
-    setTimeout(() => {
-        ui.classList.remove('instability-event', 'glitch-active');
-        feed.classList.remove('feed-glitch');
-        if (!isThreatActive) status.innerText = prevStatus;
-    }, 700);
+            window.playSound(40, 'sawtooth', 0.5, 0.08);
 
-    // Randomize next occurrence between 10 and 30 seconds
-    const nextDelay = Math.floor(Math.random() * (30000 - 10000 + 1)) + 10000;
-    setTimeout(triggerRandomFlicker, nextDelay);
-}
+            setTimeout(() => {
+                ui.classList.remove('heavy-glitch-active');
+                feed.classList.remove('feed-shredded');
+                status.style.background = "#000";
+                status.style.color = "var(--alert-color)";
+                if (!isThreatActive) status.innerText = "RECOVERING...";
+                
+                setTimeout(() => { 
+                    if (!isThreatActive) status.innerText = prevStatus; 
+                }, 1000);
+            }, 800);
+
+            const nextDelay = Math.floor(Math.random() * 20000) + 10000;
+            setTimeout(triggerRandomFlicker, nextDelay);
+        }
 
         function initSensors() {
-            if (window.DeviceOrientationEvent) {
-                window.addEventListener('deviceorientation', (event) => {
-                    let heading = event.webkitCompassHeading || event.alpha;
-                    if (heading) magBearing.innerText = Math.floor(heading).toString().padStart(3, '0') + "°";
-                });
-            }
-
             if (window.DeviceMotionEvent) {
                 window.addEventListener('devicemotion', (event) => {
                     const accel = event.acceleration || event.accelerationIncludingGravity;
@@ -400,8 +406,10 @@ function triggerRandomFlicker() {
 
             // SIMULATION LOOP FOR EMF UI
             setInterval(() => {
-                const randomStrength = (Math.random() * (60 - 40) + 25).toFixed(2);
+                const randomStrength = (Math.random() * (70 - 30) + 30).toFixed(2);
+                const randomBearing = Math.floor(Math.random() * 360).toString().padStart(3, '0') + "°";
                 updateMagUI(randomStrength);
+                magBearing.innerText = randomBearing;
             }, 200);
         }
 
@@ -497,10 +505,7 @@ function triggerRandomFlicker() {
             document.getElementById('boot-overlay').style.display = 'flex'; 
             triggerRandomFlicker();
             runMotionSonar();
-
-            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-                DeviceOrientationEvent.requestPermission().then(initSensors);
-            } else { initSensors(); }
+            initSensors();
             startSystem(); 
         });
     </script>
