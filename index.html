@@ -429,8 +429,6 @@
         const magBar = document.getElementById('mag-bar');
         const magUT = document.getElementById('mag-uT');
         const magBearing = document.getElementById('mag-bearing');
-        const uiContainer = document.getElementById('main-ui');
-        const videoFeed = document.getElementById('camera-feed');
 
         function updateMagUI(strength) {
             magUT.innerText = strength + " uT";
@@ -470,6 +468,7 @@
         }
 
         function initSensors() {
+            // ACCELEROMETER
             window.addEventListener('devicemotion', (event) => {
                 const accel = event.acceleration || event.accelerationIncludingGravity;
                 if (accel) {
@@ -477,11 +476,19 @@
                 }
             }, true);
 
+            // COMPASS / ORIENTATION
+            window.addEventListener('deviceorientation', (event) => {
+                // alpha is rotation around z-axis (compass heading)
+                if (event.alpha !== null) {
+                    const bearing = Math.round(event.alpha).toString().padStart(3, '0') + "°";
+                    magBearing.innerText = bearing;
+                }
+            }, true);
+
+            // SIMULATED MAGNETOMETER STRENGTH
             setInterval(() => {
                 const randomStrength = (Math.random() * (70 - 30) + 30).toFixed(2);
-                const randomBearing = Math.floor(Math.random() * 360).toString().padStart(3, '0') + "°";
                 updateMagUI(randomStrength);
-                magBearing.innerText = randomBearing;
             }, 200);
         }
 
@@ -587,13 +594,20 @@
             audioCtx.resume(); 
             window.playTap(650, 0.06);
 
-            // Accelerometer Permission Logic
+            // PERMISSION HANDSHAKE
             if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
                 try {
-                    const permission = await DeviceMotionEvent.requestPermission();
-                    if (permission === 'granted') initSensors();
-                } catch (err) { console.error(err); }
+                    // Request Motion
+                    const motion = await DeviceMotionEvent.requestPermission();
+                    // Request Orientation (Compass)
+                    const orientation = await DeviceOrientationEvent.requestPermission();
+                    
+                    if (motion === 'granted' || orientation === 'granted') {
+                        initSensors();
+                    }
+                } catch (err) { console.error("Sensor permission error:", err); }
             } else {
+                // Non-iOS logic
                 initSensors();
             }
 
