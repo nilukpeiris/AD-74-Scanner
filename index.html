@@ -525,30 +525,49 @@
         }
 
         function applyScanResult(data) {
-            window.playSound(880, 'sine', 0.1, 0.1);
-            const status = document.getElementById('status-display');
-            status.innerText = data.status; 
-            status.style.color = data.color;        
-            status.style.borderColor = data.color; 
-            status.style.background = "#000";       
-            
-            document.getElementById('match-pct').innerText = data.sync;
-            document.getElementById('match-pct').style.background = data.color;
-            document.getElementById('info-p').innerHTML = data.info;
+    window.playSound(880, 'sine', 0.1, 0.1);
+    const status = document.getElementById('status-display');
+    status.innerText = data.status; 
+    status.style.color = data.color;        
+    status.style.borderColor = data.color; 
+    status.style.background = "#000";       
+    
+    document.getElementById('match-pct').innerText = data.sync;
+    document.getElementById('match-pct').style.background = data.color;
+    document.getElementById('info-p').innerHTML = data.info;
 
-            if (data.shape) {
-                isThreatActive = true;
-                document.getElementById('camera-feed').style.display = 'none';
-                document.getElementById('threat-viz').style.display = 'block';
-                document.getElementById('core').style.display = (data.shape === 'cube') ? 'block' : 'none';
-                document.getElementById('viz-cube').style.display = (data.shape === 'cube') ? 'block' : 'none';
-                document.getElementById('viz-pyramid').style.display = (data.shape === 'pyramid') ? 'block' : 'none';
-                document.getElementById('viz-intact').style.display = (data.shape === 'intact') ? 'block' : 'none';
-                document.getElementById('viz-broken').style.display = (data.shape === 'broken') ? 'block' : 'none';                
-                document.getElementById('viz-flux').style.display = (data.shape === 'flux') ? 'block' : 'none';
+    if (data.shape) {
+        isThreatActive = true;
+        document.getElementById('camera-feed').style.display = 'none';
+        document.getElementById('threat-viz').style.display = 'block';
+        
+        // Hide all possible shapes first
+        const shapes = ['viz-cube', 'viz-pyramid', 'viz-intact', 'viz-broken', 'viz-flux', 'core'];
+        shapes.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
 
+        // Show the target shape
+        const targetViz = document.getElementById('viz-' + data.shape);
+        if (targetViz) {
+            targetViz.style.display = 'block';
+
+            // SPECIAL LOGIC FOR FLUX: Trigger the assembly sequence
+            if (data.shape === 'flux') {
+                // Reset classes in case it was scanned before
+                targetViz.classList.remove('assembled', 'pulse-active');
+                
+                // Force a reflow and then add the classes with the timing from your original code
+                setTimeout(() => { targetViz.classList.add('assembled'); }, 100);
+                setTimeout(() => { targetViz.classList.add('pulse-active'); }, 3200);
             }
         }
+        
+        // Show core only for the cube
+        if (data.shape === 'cube') document.getElementById('core').style.display = 'block';
+    }
+}
 
         document.getElementById('reset-btn').addEventListener('mousedown', () => window.playTap(650, 0.06));
         document.getElementById('reset-btn').addEventListener('mouseup', () => window.playTap(500, 0.04));
