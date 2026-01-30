@@ -353,34 +353,33 @@
             const percent = Math.min((strength / 100) * 100, 100);
             magBar.style.width = percent + "%";
 
-            if (strength > 80) {
-                uiContainer.classList.add('glitch-active');
-                videoFeed.classList.add('feed-glitch');
-                magBar.style.background = 'var(--alert-color)';
-            } else {
-                uiContainer.classList.remove('glitch-active');
-                videoFeed.classList.remove('feed-glitch');
-                magBar.style.background = 'var(--primary-color)';
-            }
-        }
+            magBar.style.background = (strength > 80) ? 'var(--alert-color)' : 'var(--primary-color)';
+}
 
-        function triggerRandomFlicker() {
-            const ui = document.getElementById('main-ui');
-            const status = document.getElementById('status-display');
-            const prevStatus = status.innerText;
+function triggerRandomFlicker() {
+    const ui = document.getElementById('main-ui');
+    const status = document.getElementById('status-display');
+    const feed = document.getElementById('camera-feed');
+    const prevStatus = status.innerText;
 
-            ui.classList.add('instability-event');
-            status.innerText = "WARNING: POWER INSTABILITY";
-            window.playSound(120, 'sawtooth', 0.4, 0.05);
+    // Trigger all glitch effects: shudder, flicker, and camera distortion
+    ui.classList.add('instability-event', 'glitch-active');
+    feed.classList.add('feed-glitch');
+    
+    status.innerText = "WARNING: SYSTEM INSTABILITY";
+    window.playSound(120, 'sawtooth', 0.4, 0.05);
 
-            setTimeout(() => {
-                ui.classList.remove('instability-event');
-                if (!isThreatActive) status.innerText = prevStatus;
-            }, 700);
+    // Duration of the glitch event (700ms)
+    setTimeout(() => {
+        ui.classList.remove('instability-event', 'glitch-active');
+        feed.classList.remove('feed-glitch');
+        if (!isThreatActive) status.innerText = prevStatus;
+    }, 700);
 
-            const nextDelay = Math.floor(Math.random() * (30000 - 10000 + 1)) + 10000;
-            setTimeout(triggerRandomFlicker, nextDelay);
-        }
+    // Randomize next occurrence between 10 and 30 seconds
+    const nextDelay = Math.floor(Math.random() * (30000 - 10000 + 1)) + 10000;
+    setTimeout(triggerRandomFlicker, nextDelay);
+}
 
         function initSensors() {
             if (window.DeviceOrientationEvent) {
