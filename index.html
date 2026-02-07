@@ -404,16 +404,6 @@
             osc.stop(audioCtx.currentTime + 0.05);
         };
 
-        function runMotionSonar() {
-            if (movementIntensity > 1.2) {
-                window.playTap(350 + (movementIntensity * 15), 0.03);
-                let nextTick = Math.max(50, 400 - (movementIntensity * 30));
-                setTimeout(runMotionSonar, nextTick);
-            } else {
-                setTimeout(runMotionSonar, 200);
-            }
-        }
-
 const matrixCanvas = document.getElementById('matrixCanvas');
 const mCtx = matrixCanvas.getContext('2d');
 let matrixActive = false;
@@ -443,11 +433,7 @@ function initMatrixRain() {
         mCtx.font = fontSize + 'px Space Mono';
 
         for (let i = 0; i < drops.length; i++) {
-const text = phoenicianChars[Math.floor(Math.random() * phoenicianChars.length)]; 
-
-	mCtx.shadowBlur = 8;
-
-          mCtx.fillText(text, i * fontSize, drops[i] * fontSize);
+const text = phoenicianChars[Math.floor(Math.random() * phoenicianChars.length)];            mCtx.fillText(text, i * fontSize, drops[i] * fontSize);
 
             if (drops[i] * fontSize > H && Math.random() > 0.975) {
                 drops[i] = 0;
@@ -458,6 +444,16 @@ const text = phoenicianChars[Math.floor(Math.random() * phoenicianChars.length)]
     }
     draw();
 }
+
+        function runMotionSonar() {
+            if (movementIntensity > 1.2) {
+                window.playTap(350 + (movementIntensity * 15), 0.03);
+                let nextTick = Math.max(50, 400 - (movementIntensity * 30));
+                setTimeout(runMotionSonar, nextTick);
+            } else {
+                setTimeout(runMotionSonar, 200);
+            }
+        }
 
         const SCAN_LIBRARY = {
             "FIXENGINESNOW": { status: "ENGINE REPAIR SEQUENCE INITIALIZED", color: "var(--primary-color)", info: "<strong>REMOTE UPLINK:</strong> Command received. Engines set to ONLINE / STANDBY.", shape: "flux", sync: "SYNC // 100%" },
@@ -546,54 +542,33 @@ const text = phoenicianChars[Math.floor(Math.random() * phoenicianChars.length)]
         setInterval(updateUI, 150);
 
         async function startSystem() {
-    try {
-        // 1. Start Matrix Rain immediately
-        matrixActive = true;
-        initMatrixRain(); 
+            try {
+		matrixActive = true;
+        	initMatrixRain();
 
-        // 2. Access Camera Hardware
-        const videoDevices = await codeReader.listVideoInputDevices();
-        if (videoDevices.length === 0) throw new Error("No camera found");
-        
-        // Select first available device
-        const selectedDevice = videoDevices[0].deviceId;
-        
-        // 3. RESTORED: Decoding Logic
-        // This connects the ZXing library to your video element
-        codeReader.decodeFromVideoDevice(selectedDevice, 'camera-feed', (result, err) => {
-            if (result) {
-                const scannedText = result.getText();
-                document.getElementById('decoded-output').innerText = scannedText;
+                const videoDevices = await codeReader.listVideoInputDevices();
+                const selectedDevice = videoDevices[0].deviceId;
+                codeReader.decodeFromVideoDevice(selectedDevice, 'camera-feed', (result) => {
+                    if (result && !isThreatActive) {
+                        const text = result.getText().toUpperCase();
+                        document.getElementById('decoded-output').innerText = text;
+
+                        if (text === "FIXENGINESNOW") {
+                            set(ref(db, 'shipState/engine/status'), "ONLINE / STANDBY");
+                        }
+                        if (text === "FIXHULLNOW") {
+                            set(ref(db, 'shipState/hull/status'), "NOMINAL (SEALED)");
+                        }
+
+                        if (SCAN_LIBRARY[text]) applyScanResult(SCAN_LIBRARY[text]);
+                    }
+                });
                 
-                // Check if the scanned code exists in your SCAN_LIBRARY
-                if (SCAN_LIBRARY[scannedText]) {
-                    applyScanResult(SCAN_LIBRARY[scannedText]);
-                } else {
-                    // Default for unknown codes
-                    applyScanResult({
-                        status: "UNKNOWN DATA DETECTED",
-                        color: "var(--warning-color)",
-                        info: "<strong>ENCRYPTION UNKNOWN:</strong> Fragmented data packets received. No match in local database.",
-                        shape: "pyramid",
-                        sync: "12% SYNC"
-                    });
-                }
-            }
-        });
-
-        // 4. Extended Reveal Timer
-        // Changed to 5 seconds (5000ms) as requested
-        setTimeout(() => { 
-            matrixActive = false; 
-            document.getElementById('boot-overlay').style.display = 'none'; 
-            document.getElementById('main-ui').style.opacity = '1'; 
-        }, 5000); 
-
-    } catch (err) { 
-        console.error(err);
-        document.getElementById('loading-text').innerText = "HARDWARE_ERROR: " + err.message; 
-    }
-}
+                setTimeout(() => { 
+			matrixActive = false;
+			document.getElementById('boot-overlay').style.display = 'none'; 			document.getElementById('main-ui').style.opacity = '1'; }, 5000);
+            } catch (err) { document.getElementById('loading-text').innerText = "HARDWARE_ERROR"; }
+        }
 
         function applyScanResult(data) {
     window.playSound(880, 'sine', 0.1, 0.1);
