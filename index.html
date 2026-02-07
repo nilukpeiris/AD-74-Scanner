@@ -582,12 +582,12 @@ const text = phoenicianChars[Math.floor(Math.random() * phoenicianChars.length)]
         });
 
         // 4. Extended Reveal Timer
-        // Changed to 10 seconds (10000ms) as requested
+        // Changed to 5 seconds (5000ms) as requested
         setTimeout(() => { 
             matrixActive = false; 
             document.getElementById('boot-overlay').style.display = 'none'; 
             document.getElementById('main-ui').style.opacity = '1'; 
-        }, 10000); 
+        }, 5000); 
 
     } catch (err) { 
         console.error(err);
