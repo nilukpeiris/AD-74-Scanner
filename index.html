@@ -566,7 +566,7 @@ const text = phoenicianChars[Math.floor(Math.random() * phoenicianChars.length)]
                 
                 setTimeout(() => { 
 			matrixActive = false;
-			document.getElementById('boot-overlay').style.display = 'none'; 			document.getElementById('main-ui').style.opacity = '1'; }, 5000);
+			document.getElementById('boot-overlay').style.display = 'none'; 			document.getElementById('main-ui').style.opacity = '1'; }, 10000);
             } catch (err) { document.getElementById('loading-text').innerText = "HARDWARE_ERROR"; }
         }
 
