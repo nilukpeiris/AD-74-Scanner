@@ -547,25 +547,51 @@ const text = phoenicianChars[Math.floor(Math.random() * phoenicianChars.length)]
 
         async function startSystem() {
     try {
+        // 1. Start Matrix Rain immediately
         matrixActive = true;
-        initMatrixRain(); // Start the rain
+        initMatrixRain(); 
 
+        // 2. Access Camera Hardware
         const videoDevices = await codeReader.listVideoInputDevices();
+        if (videoDevices.length === 0) throw new Error("No camera found");
+        
+        // Select first available device
         const selectedDevice = videoDevices[0].deviceId;
         
-        codeReader.decodeFromVideoDevice(selectedDevice, 'camera-feed', (result) => {
-            // ... existing scan logic ...
+        // 3. RESTORED: Decoding Logic
+        // This connects the ZXing library to your video element
+        codeReader.decodeFromVideoDevice(selectedDevice, 'camera-feed', (result, err) => {
+            if (result) {
+                const scannedText = result.getText();
+                document.getElementById('decoded-output').innerText = scannedText;
+                
+                // Check if the scanned code exists in your SCAN_LIBRARY
+                if (SCAN_LIBRARY[scannedText]) {
+                    applyScanResult(SCAN_LIBRARY[scannedText]);
+                } else {
+                    // Default for unknown codes
+                    applyScanResult({
+                        status: "UNKNOWN DATA DETECTED",
+                        color: "var(--warning-color)",
+                        info: "<strong>ENCRYPTION UNKNOWN:</strong> Fragmented data packets received. No match in local database.",
+                        shape: "pyramid",
+                        sync: "12% SYNC"
+                    });
+                }
+            }
         });
 
-        // Hide the matrix and show the UI after 3 seconds
+        // 4. Extended Reveal Timer
+        // Changed to 10 seconds (10000ms) as requested
         setTimeout(() => { 
             matrixActive = false; 
             document.getElementById('boot-overlay').style.display = 'none'; 
             document.getElementById('main-ui').style.opacity = '1'; 
-        }, 5000);
+        }, 10000); 
 
     } catch (err) { 
-        document.getElementById('loading-text').innerText = "HARDWARE_ERROR"; 
+        console.error(err);
+        document.getElementById('loading-text').innerText = "HARDWARE_ERROR: " + err.message; 
     }
 }
 
